@@ -3,625 +3,301 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Guidelines World Map</title>
-
-<!-- Mapbox GL JS -->
+<title>AI Guidelines in Media — World Map</title>
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
-
-<!-- Arial is used throughout — no external font needed -->
-
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet"/>
+<script src="data.js"></script>
 <style>
-/* ============================================================
-   DESIGN TOKENS — change everything here, nothing breaks
-   ============================================================ */
 :root {
-  /* Brand colours */
-  --color-primary:        #1d4ed8;   /* Main accent (buttons, active states) */
-  --color-primary-light:  #dbeafe;   /* Light background for active chips */
-  --color-primary-dark:   #1e3a8a;   /* Hover on primary */
+  --primary:        #1d4ed8;
+  --primary-light:  #dbeafe;
+  --primary-dark:   #1e3a8a;
+  --surface:        #ffffff;
+  --surface-subtle: #f8fafc;
+  --border:         #e2e8f0;
+  --border-strong:  #cbd5e1;
+  --text:           #0f172a;
+  --text-sec:       #475569;
+  --text-muted:     #94a3b8;
+  --radius:         10px;
+  --radius-sm:      6px;
+  --shadow:         0 2px 12px rgba(0,0,0,.10), 0 1px 3px rgba(0,0,0,.06);
+  --shadow-lg:      0 8px 30px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+  --font:           Arial, Helvetica, sans-serif;
+  --panel-w:        252px;
+  --popup-w:        340px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:var(--font); font-size:14px; color:var(--text); background:#e8edf2; }
+#map { position:absolute; inset:0; }
 
-  /* UI surfaces */
-  --color-surface:        #ffffff;   /* Panel background */
-  --color-surface-subtle: #f8fafc;   /* Slightly off-white */
-  --color-border:         #e2e8f0;   /* Panel borders */
-  --color-border-strong:  #cbd5e1;
+/* ── MOBILE BANNER (soft, not a wall) ── */
+#mobile-banner {
+  display:none;
+  position:fixed; top:0; left:0; right:0; z-index:99999;
+  background:#1e3a8a; color:#fff;
+  padding:10px 16px; font-size:13px; text-align:center;
+  gap:8px; align-items:center; justify-content:center;
+}
+#mobile-banner span { flex:1; }
+#mobile-banner button {
+  background:rgba(255,255,255,.2); border:none; color:#fff;
+  border-radius:4px; padding:4px 10px; font-size:12px; cursor:pointer;
+}
+@media (max-width:768px) { #mobile-banner { display:flex; } }
 
-  /* Text */
-  --color-text:           #0f172a;   /* Primary text */
-  --color-text-secondary: #475569;   /* Labels, meta */
-  --color-text-muted:     #94a3b8;   /* Placeholders */
-
-  /* Continent colours — change all 5 here */
-  --color-europe:         #2563eb;   /* Blue */
-  --color-namerica:       #d97706;   /* Amber */
-  --color-samerica:       #059669;   /* Emerald */
-  --color-asia:           #dc2626;   /* Red */
-  --color-oceania:        #0891b2;   /* Cyan */
-  --color-other:          #7c3aed;   /* Purple (fallback) */
-
-  /* Spacing & shape */
-  --radius:               10px;
-  --radius-sm:            6px;
-  --shadow:               0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-lg:            0 8px 30px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
-
-  /* Typography */
-  --font-heading:         Arial, Helvetica, sans-serif;
-  --font-body:            Arial, Helvetica, sans-serif;
-
-  /* Panel widths */
-  --panel-width:          240px;
-  --popup-width:          320px;
+/* ── MOBILE FILTER TOGGLE ── */
+#filter-toggle {
+  display:none;
+  position:absolute; top:16px; left:16px; z-index:20;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:8px 14px;
+  box-shadow:var(--shadow); cursor:pointer;
+  font-size:13px; font-family:var(--font); color:var(--text);
+}
+@media (max-width:768px) {
+  #filter-toggle { display:flex; align-items:center; gap:6px; }
+  #filters { display:none; top:56px; }
+  #filters.mobile-open { display:block; }
 }
 
-/* ============================================================
-   BASE
-   ============================================================ */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: var(--font-body);
-  font-size: 14px;
-  color: var(--color-text);
-  background: #e8edf2;
-}
-
-#map {
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 100%;
-}
-
-/* ============================================================
-   HEADER (top-centre)
-   ============================================================ */
+/* ── HEADER ── */
 #header {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 10px 22px;
-  text-align: center;
-  white-space: nowrap;
-  pointer-events: none;
-  box-shadow: var(--shadow);
+  position:absolute; top:16px; left:50%; transform:translateX(-50%);
+  z-index:10; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:10px 22px; text-align:center;
+  white-space:nowrap; pointer-events:none; box-shadow:var(--shadow);
+}
+#header h1 { font-size:15px; font-weight:700; }
+#header p  { font-size:12px; color:var(--text-sec); margin-top:2px; }
+@media (max-width:768px) {
+  #header { left:50%; transform:translateX(-50%); top:56px; white-space:normal; max-width:calc(100vw - 32px); }
 }
 
-#header h1 {
-  font-family: var(--font-heading);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text);
-  letter-spacing: 0.02em;
-}
-
-#header p {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  margin-top: 2px;
-}
-
-/* ============================================================
-   FILTER PANEL (top-left)
-   ============================================================ */
+/* ── FILTER PANEL ── */
 #filters {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 10;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 16px;
-  width: var(--panel-width);
-  box-shadow: var(--shadow);
+  position:absolute; top:16px; left:16px; z-index:10;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:14px; width:var(--panel-w);
+  box-shadow:var(--shadow); max-height:calc(100vh - 120px); overflow-y:auto;
 }
-
-#filters h3 {
-  font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 14px;
-}
-
-.filter-section {
-  margin-bottom: 14px;
-}
-
+#filters::-webkit-scrollbar { width:4px; }
+#filters::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:2px; }
+.filter-title { font-size:12px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.filter-section { margin-bottom:12px; }
 .filter-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  margin-bottom: 7px;
+  font-size:10px; font-weight:600; color:var(--text-sec);
+  text-transform:uppercase; letter-spacing:.07em; margin-bottom:6px;
 }
-
-/* Chips */
-.filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
+.filter-chips { display:flex; flex-wrap:wrap; gap:4px; }
 .chip {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-family: var(--font-body);
-  cursor: pointer;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-secondary);
-  background: var(--color-surface-subtle);
-  transition: all 0.15s;
-  line-height: 1.5;
+  padding:3px 9px; border-radius:20px; font-size:11px; cursor:pointer;
+  border:1px solid var(--border-strong); color:var(--text-sec);
+  background:var(--surface-subtle); transition:all .15s; line-height:1.5;
+  font-family:var(--font);
 }
-
-.chip:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: var(--color-primary-light);
+.chip:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-light); }
+.chip.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+.multi-select { position:relative; }
+.multi-select-btn {
+  width:100%; background:var(--surface-subtle); border:1px solid var(--border-strong);
+  color:var(--text); border-radius:var(--radius-sm); padding:6px 9px;
+  font-size:11px; font-family:var(--font); cursor:pointer; text-align:left;
+  display:flex; justify-content:space-between; align-items:center; transition:border-color .15s;
 }
-
-.chip.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #ffffff;
+.multi-select-btn:hover { border-color:var(--primary); }
+.multi-select-dropdown {
+  display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+  background:var(--surface); border:1px solid var(--border-strong);
+  border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); z-index:1000;
+  max-height:180px; overflow-y:auto;
 }
-
-/* Dropdown */
-.type-select {
-  width: 100%;
-  background: var(--color-surface-subtle);
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text);
-  border-radius: var(--radius-sm);
-  padding: 7px 9px;
-  font-size: 12px;
-  font-family: var(--font-body);
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.15s;
+.multi-select-dropdown.open { display:block; }
+.multi-select-option {
+  padding:7px 10px; font-size:11px; cursor:pointer; display:flex;
+  align-items:center; gap:8px; transition:background .1s;
+  border-bottom:.5px solid var(--border);
 }
-
-.type-select:focus {
-  border-color: var(--color-primary);
+.multi-select-option:last-child { border-bottom:none; }
+.multi-select-option:hover { background:var(--primary-light); }
+.multi-select-option.selected { color:var(--primary); font-weight:600; }
+.check {
+  width:14px; height:14px; border:1.5px solid var(--border-strong); border-radius:3px;
+  flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:9px;
 }
-
-/* Reset button */
+.multi-select-option.selected .check { background:var(--primary); border-color:var(--primary); color:#fff; }
 #reset-btn {
-  width: 100%;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-surface-subtle);
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  font-family: var(--font-body);
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-top: 4px;
+  width:100%; padding:7px; border-radius:var(--radius-sm);
+  border:1px solid var(--border-strong); background:var(--surface-subtle);
+  color:var(--text-sec); font-size:11px; font-family:var(--font);
+  cursor:pointer; transition:all .15s; margin-top:4px;
 }
+#reset-btn:hover { background:var(--primary-light); border-color:var(--primary); color:var(--primary); }
 
-#reset-btn:hover {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-/* ============================================================
-   STATS (bottom-left)
-   ============================================================ */
+/* ── STATS ── */
 #stats {
-  position: absolute;
-  bottom: 30px;
-  left: 16px;
-  z-index: 10;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 9px 14px;
-  pointer-events: none;
-  box-shadow: var(--shadow);
+  position:absolute; bottom:30px; left:16px; z-index:10;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:8px 12px;
+  box-shadow:var(--shadow); display:flex; gap:12px; align-items:center;
 }
-
-#stats span {
-  font-size: 12px;
-  color: var(--color-text-secondary);
+.stat-item {
+  display:flex; align-items:center; gap:5px; font-size:12px;
+  color:var(--text-sec); cursor:pointer; position:relative;
 }
-
-#stats strong {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-primary);
+.stat-item strong { font-size:13px; font-weight:600; color:var(--primary); }
+.stat-info-icon {
+  width:14px; height:14px; border-radius:50%; background:var(--primary-light);
+  color:var(--primary); font-size:9px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
 }
+.stat-tooltip {
+  display:none; position:absolute; bottom:calc(100% + 8px); left:0;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); box-shadow:var(--shadow-lg);
+  padding:10px 12px; min-width:180px; max-width:240px; z-index:500;
+  max-height:220px; overflow-y:auto;
+}
+.stat-tooltip.open { display:block; }
+.stat-tooltip h5 {
+  font-size:10px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--text-sec); margin-bottom:7px;
+}
+.stat-tooltip-item {
+  font-size:11px; color:var(--text); padding:2px 0;
+  border-bottom:.5px solid var(--border);
+}
+.stat-tooltip-item:last-child { border-bottom:none; }
 
-/* ============================================================
-   LEGEND (bottom-right)
-   ============================================================ */
+/* ── LEGEND ── */
 #legend {
-  position: absolute;
-  bottom: 30px;
-  right: 50px;
-  z-index: 10;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  pointer-events: none;
-  box-shadow: var(--shadow);
+  position:absolute; bottom:30px; right:50px; z-index:10;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:10px 12px;
+  pointer-events:none; box-shadow:var(--shadow);
 }
-
 #legend h4 {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  margin-bottom: 8px;
+  font-size:9px; font-weight:600; color:var(--text-sec);
+  text-transform:uppercase; letter-spacing:.07em; margin-bottom:7px;
 }
-
 .legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 5px;
-  font-size: 12px;
-  color: var(--color-text-secondary);
+  display:flex; align-items:center; gap:7px;
+  margin-bottom:4px; font-size:11px; color:var(--text-sec);
 }
-
 .legend-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  border: 1.5px solid rgba(255,255,255,0.8);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  width:10px; height:10px; border-radius:50%; flex-shrink:0;
+  border:1.5px solid rgba(255,255,255,.8); box-shadow:0 1px 3px rgba(0,0,0,.2);
 }
 
-/* ============================================================
-   HOVER TOOLTIP
-   ============================================================ */
-#outlet-label {
-  position: absolute;
-  z-index: 200;
-  pointer-events: none;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  padding: 7px 11px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text);
-  white-space: nowrap;
-  box-shadow: var(--shadow-lg);
-  display: none;
-}
-
-#outlet-label.visible { display: block; }
-
-#outlet-label small {
-  display: block;
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--color-text-secondary);
-  margin-top: 2px;
-}
-
-/* ============================================================
-   DETAIL POPUP
-   ============================================================ */
-#popup {
-  position: absolute;
-  z-index: 100;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  width: var(--popup-width);
-  box-shadow: var(--shadow-lg);
-  display: none;
-  flex-direction: column;
-  max-height: 75vh;
-}
-
-#popup.visible { display: flex; }
-
-.popup-header {
-  padding: 14px 16px 11px;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.popup-close {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0 0 0 8px;
-  line-height: 1;
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-
-.popup-close:hover { color: var(--color-text); }
-
-.popup-org {
-  font-family: var(--font-heading);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.popup-meta {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  margin-top: 2px;
-}
-
-.popup-body {
-  overflow-y: auto;
-  padding: 12px 16px;
-  flex: 1;
-}
-
-.popup-body::-webkit-scrollbar { width: 4px; }
-.popup-body::-webkit-scrollbar-thumb {
-  background: var(--color-border-strong);
-  border-radius: 2px;
-}
-
-.info-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-  align-items: flex-start;
-}
-
-.info-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  width: 80px;
-  flex-shrink: 0;
-  padding-top: 1px;
-}
-
-.info-value {
-  font-size: 12px;
-  color: var(--color-text);
-}
-
-.info-link a {
-  font-size: 12px;
-  color: var(--color-primary);
-  text-decoration: none;
-}
-
-.info-link a:hover {
-  color: var(--color-primary-dark);
-  text-decoration: underline;
-}
-
-.divider {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  margin: 10px 0;
-}
-
-.codes-section h5,
-.segments-section h5 {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-}
-
-.code-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  margin: 2px 2px 0 0;
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  border: 1px solid #bfdbfe;
-}
-
-.code-badge.highlight {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #bbf7d0;
-}
-
-.seg-category-header {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text);
-  background: var(--color-surface-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 4px 8px;
-  margin: 10px 0 5px 0;
-  letter-spacing: 0.02em;
-}
-
-.seg-category-header:first-child { margin-top: 0; }
-
-.segments-section { margin-top: 10px; }
-
-.seg-item {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
-  margin-bottom: 8px;
-  padding: 7px 9px;
-  background: var(--color-surface-subtle);
-  border-radius: var(--radius-sm);
-  border-left: 3px solid var(--color-primary);
-}
-
-.seg-code {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: 3px;
-}
-
-/* ============================================================
-   COUNTRY PIN + DROPDOWN
-   ============================================================ */
-
-.country-pin-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  position: relative;
-}
-
-/* Pin head */
-.pin-head {
-  width: 30px;
-  height: 30px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2.5px solid #ffffff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  transition: transform 0.15s;
-}
-
-.pin-head:hover { transform: rotate(-45deg) scale(1.15); }
-
-.pin-head span {
-  transform: rotate(45deg);
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  font-family: Arial, Helvetica, sans-serif;
-  line-height: 1;
-}
-
-/* Pin tail */
-.pin-tail {
-  width: 2px;
-  height: 8px;
-  background: rgba(0,0,0,0.2);
-}
-
-/* Dropdown — toggled by JS (.open class), not CSS hover */
-.pin-dropdown {
-  display: none;
-  position: absolute;
-  top: 46px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #ffffff;
-  border: 0.5px solid #d1d5db;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.14);
-  min-width: 160px;
-  max-width: 220px;
-  z-index: 500;
-  white-space: nowrap;
-}
-
-.pin-dropdown.open { display: block; }
-
-.pin-dropdown-item {
-  padding: 8px 12px;
-  font-size: 12px;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #1e293b;
-  cursor: pointer;
-  border-bottom: 0.5px solid #f1f5f9;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background 0.1s;
-}
-
-.pin-dropdown-item:last-child { border-bottom: none; }
-.pin-dropdown-item:hover { background: #eff6ff; color: #1d4ed8; }
-
-.pin-dropdown-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.pin-dropdown-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ============================================================
-   INFO MODAL
-   ============================================================ */
+/* ── INFO BUTTON + MODAL ── */
 #info-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 10;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: Arial, Helvetica, sans-serif;
-  transition: background 0.15s;
+  position:absolute; top:16px; right:16px; z-index:10;
+  width:34px; height:34px; border-radius:50%;
+  background:var(--surface); border:1px solid var(--border);
+  box-shadow:var(--shadow); font-size:15px; font-weight:700;
+  color:var(--primary); cursor:pointer; display:flex;
+  align-items:center; justify-content:center; transition:background .15s;
 }
-#info-btn:hover { background: var(--color-primary-light); }
-
+#info-btn:hover { background:var(--primary-light); }
 #info-modal {
-  display: none;
-  position: absolute;
-  top: 60px;
-  right: 16px;
-  z-index: 200;
-  background: #ffffff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  width: 300px;
-  padding: 18px 20px;
-  font-family: Arial, Helvetica, sans-serif;
+  display:none; position:absolute; top:58px; right:16px; z-index:200;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); box-shadow:var(--shadow-lg);
+  width:320px; padding:18px 20px;
 }
-#info-modal.visible { display: block; }
-#info-modal h2 { font-size: 14px; font-weight: 700; color: var(--color-text); margin-bottom: 10px; }
-#info-modal p { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 8px; }
+#info-modal.visible { display:block; }
+#info-modal h2 { font-size:14px; font-weight:700; margin-bottom:10px; }
+#info-modal p  { font-size:12px; color:var(--text-sec); line-height:1.7; margin-bottom:8px; }
 #info-modal-close {
-  position: absolute; top: 10px; right: 12px;
-  background: none; border: none; font-size: 16px;
-  color: var(--color-text-muted); cursor: pointer;
+  position:absolute; top:10px; right:12px; background:none; border:none;
+  font-size:16px; color:var(--text-muted); cursor:pointer;
 }
+
+/* ── ORG LIST POPUP ── */
+.mapboxgl-popup-content {
+  padding:0 !important; border-radius:8px !important;
+  box-shadow:0 4px 18px rgba(0,0,0,.14) !important;
+  overflow:hidden; min-width:180px; max-width:240px;
+  max-height:260px; overflow-y:auto;
+  font-family:var(--font) !important;
+}
+.mapboxgl-popup-close-button { display:none; }
+.org-list-item {
+  padding:8px 12px; font-size:12px; color:#1e293b;
+  cursor:pointer; border-bottom:.5px solid #f1f5f9;
+  display:flex; align-items:center; gap:8px; transition:background .1s;
+}
+.org-list-item:last-child { border-bottom:none; }
+.org-list-item:hover { background:#eff6ff; color:#1d4ed8; }
+.org-list-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* ── DETAIL POPUP ── */
+#popup {
+  position:absolute; z-index:100; background:var(--surface);
+  border:1px solid var(--border); border-radius:var(--radius);
+  width:var(--popup-w); box-shadow:var(--shadow-lg);
+  display:none; flex-direction:column; max-height:80vh;
+}
+#popup.visible { display:flex; }
+.popup-header {
+  padding:14px 16px 11px; border-bottom:1px solid var(--border);
+  flex-shrink:0; display:flex; justify-content:space-between; align-items:flex-start;
+}
+.popup-close {
+  background:none; border:none; color:var(--text-muted);
+  font-size:18px; cursor:pointer; padding:0 0 0 8px; line-height:1; flex-shrink:0;
+}
+.popup-close:hover { color:var(--text); }
+.popup-org  { font-size:15px; font-weight:700; }
+.popup-meta { font-size:11px; color:var(--text-sec); margin-top:2px; }
+.popup-body { overflow-y:auto; padding:12px 16px; flex:1; }
+.popup-body::-webkit-scrollbar { width:4px; }
+.popup-body::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:2px; }
+.info-row { display:flex; gap:8px; margin-bottom:8px; align-items:flex-start; }
+.info-label { font-size:11px; font-weight:600; color:var(--text-sec); width:90px; flex-shrink:0; padding-top:1px; }
+.info-value { font-size:12px; color:var(--text); }
+.info-link a { font-size:12px; color:var(--primary); text-decoration:none; }
+.info-link a:hover { color:var(--primary-dark); text-decoration:underline; }
+.divider { border:none; border-top:1px solid var(--border); margin:10px 0; }
+.codes-section h5, .segments-section h5 {
+  font-size:10px; font-weight:600; color:var(--text-sec);
+  text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;
+}
+.code-badge {
+  display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px;
+  margin:2px 2px 0 0; background:var(--primary-light);
+  color:var(--primary-dark); border:1px solid #bfdbfe;
+}
+.code-badge.highlight { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
+.segments-section { margin-top:10px; }
+.seg-category-header {
+  font-size:11px; font-weight:600; color:var(--text);
+  background:var(--surface-subtle); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:4px 8px; margin:10px 0 5px 0;
+}
+.seg-category-header:first-child { margin-top:0; }
+.seg-item {
+  font-size:11px; color:var(--text-sec); line-height:1.6;
+  margin-bottom:8px; padding:7px 9px; background:var(--surface-subtle);
+  border-radius:var(--radius-sm);
+  border-left:3px solid var(--primary);
+  border-top-left-radius:0; border-bottom-left-radius:0;
+}
+.seg-code { font-size:10px; font-weight:600; color:var(--primary); margin-bottom:3px; }
 </style>
 </head>
 <body>
+
+<!-- MOBILE BANNER -->
+<div id="mobile-banner">
+  <span>🗺️ This map works best on desktop — you can still browse on mobile.</span>
+  <button onclick="document.getElementById('mobile-banner').style.display='none'">✕</button>
+</div>
+
+<!-- MOBILE FILTER TOGGLE -->
+<button id="filter-toggle" onclick="document.getElementById('filters').classList.toggle('mobile-open')">
+  🔍 Filter
+</button>
 
 <div id="map"></div>
 
@@ -629,104 +305,6 @@ body {
 <div id="header">
   <h1>🌍 AI Guidelines in Media — World Map</h1>
   <p id="header-sub">Loading…</p>
-</div>
-
-<!-- FILTER PANEL -->
-<div id="filters">
-  <h3>🔍 Filter</h3>
-
-  <!-- Thematic Focus = Guideline Category (top-level chips) -->
-  <div class="filter-section">
-    <div class="filter-label">Thematic Focus</div>
-    <div class="filter-chips" id="category-filters">
-      <button class="chip active" data-category="all">All</button>
-      <button class="chip" data-category="Ethical Dimensions of AI Content">Ethical Dimensions</button>
-      <button class="chip" data-category="Governance & Enforcement Architecture">Governance</button>
-      <button class="chip" data-category="Rhetorical Strategies Toward AI Adoption">Rhetorical Strategies</button>
-      <button class="chip" data-category="Visual AI Scope">Visual AI Scope</button>
-    </div>
-  </div>
-
-  <!-- Sub-Code filter (chips, optional refinement) -->
-  <div class="filter-section">
-    <div class="filter-label">Code</div>
-    <div class="filter-chips" id="code-filters">
-      <button class="chip active" data-code="all">All</button>
-      <button class="chip" data-code="Harm & Safety">Harm & Safety</button>
-      <button class="chip" data-code="Transparency & Disclosure">Transparency</button>
-      <button class="chip" data-code="Intellectual Property & Copyright">IP & Copyright</button>
-      <button class="chip" data-code="Bias, Fairness & Representation">Bias & Fairness</button>
-      <button class="chip" data-code="Integrity & Trustworthiness (Factualness)">Integrity</button>
-      <button class="chip" data-code="Accountability Structures">Accountability</button>
-      <button class="chip" data-code="Formal Policy Embedding">Formal Policy</button>
-    </div>
-  </div>
-
-  <!-- Output filter -->
-  <div class="filter-section">
-    <div class="filter-label">Output</div>
-    <select class="type-select" id="output-filter">
-      <option value="all">All Outputs</option>
-      <option value="Online News Paper">Online News Paper</option>
-      <option value="PSM Broadcast">PSM Broadcast</option>
-      <option value="TBD">TBD</option>
-    </select>
-  </div>
-
-  <!-- Organisation Type filter -->
-  <div class="filter-section">
-    <div class="filter-label">Organisation Type</div>
-    <select class="type-select" id="type-filter">
-      <option value="all">All Types</option>
-      <option value="PSM">PSM (Public Service Media)</option>
-      <option value="Digital Media Outlet">Digital Media Outlet</option>
-      <option value="News Company">News Company</option>
-      <option value="Agency">News Agency</option>
-      <option value="Media tech company">Media Tech Company</option>
-      <option value="Stock platform">Stock Platform</option>
-      <option value="NGO">NGO / Organisation</option>
-    </select>
-  </div>
-
-  <div class="filter-section">
-    <div class="filter-label">Continent</div>
-    <div class="filter-chips" id="continent-filters">
-      <button class="chip active" data-continent="all">All</button>
-      <button class="chip" data-continent="Europe">Europe</button>
-      <button class="chip" data-continent="North America">N. America</button>
-      <button class="chip" data-continent="South America">S. America</button>
-      <button class="chip" data-continent="Asia">Asia</button>
-      <button class="chip" data-continent="Oceania">Oceania</button>
-    </div>
-  </div>
-
-  <button id="reset-btn">↺ Reset Filters</button>
-</div>
-
-<!-- STATS -->
-<div id="stats">
-  <strong id="stat-orgs">—</strong><span> Organisations &nbsp;·&nbsp;</span>
-  <strong id="stat-countries">—</strong><span> Countries</span>
-</div>
-
-<!-- LEGEND -->
-<div id="legend">
-  <h4>Continent</h4>
-  <div class="legend-item">
-    <div class="legend-dot" style="background: var(--color-europe)"></div>Europe
-  </div>
-  <div class="legend-item">
-    <div class="legend-dot" style="background: var(--color-namerica)"></div>N. America
-  </div>
-  <div class="legend-item">
-    <div class="legend-dot" style="background: var(--color-samerica)"></div>S. America
-  </div>
-  <div class="legend-item">
-    <div class="legend-dot" style="background: var(--color-asia)"></div>Asia
-  </div>
-  <div class="legend-item">
-    <div class="legend-dot" style="background: var(--color-oceania)"></div>Oceania
-  </div>
 </div>
 
 <!-- INFO BUTTON -->
@@ -737,8 +315,126 @@ body {
   <button id="info-modal-close">✕</button>
   <h2>About this Project</h2>
   <p>This map visualises AI guidelines published by media organisations worldwide.</p>
-  <p>Each pin represents a country. Click a pin to see the organisations, then click an organisation to read their guidelines and coded segments.</p>
-  <p>Use the filters on the left to narrow down by thematic focus, code, output type, organisation type, or continent.</p>
+  <p>Click a country pin to see the organisations active there, then click an organisation name to read their guidelines and coded segments.</p>
+  <p>Use the filters on the left to narrow results by organisation type, guideline category, code, or continent.</p>
+</div>
+
+<!-- FILTER PANEL -->
+<nav id="filters">
+  <div class="filter-title">🔍 Filter</div>
+
+  <div class="filter-section">
+    <div class="filter-label">Organisation Type</div>
+    <div class="filter-chips" id="type-filters">
+      <button class="chip active" data-value="all">All</button>
+      <button class="chip" data-value="News Media">News Media</button>
+      <button class="chip" data-value="Commercial/Private Media">Commercial / Private Media</button>
+      <button class="chip" data-value="Governance Body">Governance Body</button>
+      <button class="chip" data-value="NGO / Coalition">NGO / Coalition</button>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <div class="filter-label">Organisation Subtype</div>
+    <div class="multi-select" id="subtype-select">
+      <button class="multi-select-btn" id="subtype-btn">
+        <span id="subtype-label">All Subtypes</span><span>▾</span>
+      </button>
+      <div class="multi-select-dropdown" id="subtype-dropdown">
+        <div class="multi-select-option selected" data-value="all"><div class="check">✓</div>All</div>
+        <div class="multi-select-option" data-value="Public Service Media"><div class="check"></div>Public Service Media</div>
+        <div class="multi-select-option" data-value="Digital News Outlet"><div class="check"></div>Digital News Outlet</div>
+        <div class="multi-select-option" data-value="Legacy Media"><div class="check"></div>Legacy Media</div>
+        <div class="multi-select-option" data-value="News Agency"><div class="check"></div>News Agency</div>
+        <div class="multi-select-option" data-value="Media Tech Company"><div class="check"></div>Media Tech Company</div>
+        <div class="multi-select-option" data-value="Image Stock Platform"><div class="check"></div>Image Stock Platform</div>
+        <div class="multi-select-option" data-value="Press Council"><div class="check"></div>Press Council</div>
+        <div class="multi-select-option" data-value="Regulator"><div class="check"></div>Regulator</div>
+        <div class="multi-select-option" data-value="NGO / Coalition"><div class="check"></div>NGO / Coalition</div>
+        <div class="multi-select-option" data-value="Commercial/Private Media"><div class="check"></div>Commercial/Private Media</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <div class="filter-label">Guideline Category</div>
+    <div class="filter-chips" id="category-filters">
+      <button class="chip active" data-value="all">All</button>
+      <button class="chip" data-value="Ethical Dimensions of AI Content">Ethical</button>
+      <button class="chip" data-value="Governance & Enforcement Architecture">Governance</button>
+      <button class="chip" data-value="Rhetorical Strategies Toward AI Adoption">Rhetorical</button>
+      <button class="chip" data-value="Visual AI Scope">Visual AI</button>
+      <button class="chip" data-value="New Codes">New Codes</button>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <div class="filter-label">Code</div>
+    <div class="multi-select" id="code-select">
+      <button class="multi-select-btn" id="code-btn">
+        <span id="code-label">All Codes</span><span>▾</span>
+      </button>
+      <div class="multi-select-dropdown" id="code-dropdown">
+        <div class="multi-select-option selected" data-value="all"><div class="check">✓</div>All</div>
+        <div class="multi-select-option" data-value="Harm &amp; Safety"><div class="check"></div>Harm &amp; Safety</div>
+        <div class="multi-select-option" data-value="Transparency &amp; Disclosure"><div class="check"></div>Transparency &amp; Disclosure</div>
+        <div class="multi-select-option" data-value="Intellectual Property &amp; Copyright"><div class="check"></div>IP &amp; Copyright</div>
+        <div class="multi-select-option" data-value="Bias, Fairness &amp; Representation"><div class="check"></div>Bias &amp; Fairness</div>
+        <div class="multi-select-option" data-value="Integrity &amp; Trustworthiness (Factualness)"><div class="check"></div>Integrity</div>
+        <div class="multi-select-option" data-value="Accountability Structures"><div class="check"></div>Accountability</div>
+        <div class="multi-select-option" data-value="Formal Policy Embedding"><div class="check"></div>Formal Policy</div>
+        <div class="multi-select-option" data-value="Governance &amp; Monitoring Mechanisms"><div class="check"></div>Governance Mechanisms</div>
+        <div class="multi-select-option" data-value="Static Visuals (Images/Photos)"><div class="check"></div>Static Visuals</div>
+        <div class="multi-select-option" data-value="Moving Images (Video/Film)"><div class="check"></div>Moving Images</div>
+        <div class="multi-select-option" data-value="(Info)graphics &amp; Illustrations"><div class="check"></div>(Info)graphics</div>
+        <div class="multi-select-option" data-value="Constraint / Prohibitive Framing"><div class="check"></div>Constraint Framing</div>
+        <div class="multi-select-option" data-value="Legitimation / Supportive Framing"><div class="check"></div>Legitimation Framing</div>
+        <div class="multi-select-option" data-value="Dynamicity of guidelines regarding visuals"><div class="check"></div>Dynamicity</div>
+        <div class="multi-select-option" data-value="No replacement of humans"><div class="check"></div>No replacement of humans</div>
+        <div class="multi-select-option" data-value="Train employees"><div class="check"></div>Train employees</div>
+        <div class="multi-select-option" data-value="NEW: Same rules for external partners who provide services"><div class="check"></div>Same rules for partners</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <div class="filter-label">Continent</div>
+    <div class="filter-chips" id="continent-filters">
+      <button class="chip active" data-value="all">All</button>
+      <button class="chip" data-value="Europe">Europe</button>
+      <button class="chip" data-value="North America">N. America</button>
+      <button class="chip" data-value="South America">S. America</button>
+      <button class="chip" data-value="Asia">Asia</button>
+      <button class="chip" data-value="Oceania">Oceania</button>
+    </div>
+  </div>
+
+  <button id="reset-btn">↺ Reset Filters</button>
+</nav>
+
+<!-- STATS -->
+<div id="stats">
+  <div class="stat-item">
+    <strong id="stat-orgs">—</strong><span>&nbsp;Organisations</span>
+    <div class="stat-info-icon" id="org-info-btn">i</div>
+    <div class="stat-tooltip" id="org-tooltip"><h5>Organisations</h5><div id="org-tooltip-list"></div></div>
+  </div>
+  <span style="color:var(--border-strong)">·</span>
+  <div class="stat-item">
+    <strong id="stat-countries">—</strong><span>&nbsp;Countries</span>
+    <div class="stat-info-icon" id="country-info-btn">i</div>
+    <div class="stat-tooltip" id="country-tooltip"><h5>Countries</h5><div id="country-tooltip-list"></div></div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div id="legend">
+  <h4>Continent</h4>
+  <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Europe</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>N. America</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>S. America</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>Asia</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0891b2"></div>Oceania</div>
 </div>
 
 <!-- DETAIL POPUP -->
@@ -753,22 +449,16 @@ body {
   <div class="popup-body" id="popup-body"></div>
 </div>
 
-
 <script>
-/* ============================================================
-   CONFIG — adjust map behaviour here
-   ============================================================ */
+'use strict';
+
 const CONFIG = {
-  accessToken: 'pk.eyJ1IjoibWlzbnVzIiwiYSI6ImNtbzh3NnVoODAzaXgycXM4ZDM1a3N3cjYifQ.Dn3yDZU4xGeGenDSVcEZ4Q',   // ← paste your token
+  accessToken: 'pk.eyJ1IjoibWlzbnVzIiwiYSI6ImNtbzh3NnVoODAzaXgycXM4ZDM1a3N3cjYifQ.Dn3yDZU4xGeGenDSVcEZ4Q',
   styleUrl:    'mapbox://styles/misnus/cmolikd7u002k01r0312u0m81',
-
-  // Starting view — North Atlantic (Greenland), world visible
-  center: [-40, 55],
-  zoom:   1.8,
-  minZoom: 1.2,
-  maxZoom: 8,
-
-  // Continent → colour mapping (matches CSS variables)
+  center:      [-40, 30],
+  zoom:        1.8,
+  minZoom:     1.2,
+  maxZoom:     10,
   continentColors: {
     'Europe':        '#2563eb',
     'North America': '#d97706',
@@ -779,468 +469,283 @@ const CONFIG = {
   defaultColor: '#7c3aed',
 };
 
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
 
-/* ============================================================
-   DATA — will be replaced by Excel-import in Step 2
-   New structure matches MockUp columns:
-   Continent, Country, Organization, Type, Output,
-   Last Updated, Guideline Category, Code, Subcode, Link, Segment Text
-
-   Each org entry looks like:
-   {
-     organization: 'BBC',
-     type:         'PSM',
-     country:      'United Kingdom',
-     continent:    'Europe',
-     last_updated: '2000',
-     link:         'https://...',
-     output:       '...',           ← stored, not shown yet
-     categories:   ['Visual AI Scope', 'Ethical Dimensions of AI Content'],
-     codes:        ['Static Visuals (Images/Photos)', 'Harm & Safety'],
-     segments: [
-       {
-         category: 'Visual AI Scope',
-         code:     'Static Visuals (Images/Photos)',
-         subcode:  '',
-         text:     'Any generative AI options…'
-       }
-     ]
-   }
-   ============================================================ */
-/* ============================================================
-   DATA — converted from Excel (AI_Mapping_MockUp_List.xlsx)
-   To update: give the new Excel to Claude → get new COUNTRY_DATA block → paste here
-   ============================================================ */
-const COUNTRY_DATA = {"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[121.5654,25.033]},"properties":{"country":"Taiwan","continent":"Asia","org_count":1,"orgs_data":"[{\"organization\": \"PTS\", \"type\": \"PSM\", \"country\": \"Taiwan\", \"continent\": \"Asia\", \"last_updated\": \"2024\", \"output\": \"TBD\", \"link\": \"www.google.ch\", \"categories\": [\"Ethical Dimensions of AI Content\", \"Governance & Enforcement Architecture\"], \"codes\": [\"Harm & Safety\", \"Accountability Structures\"], \"segments\": [{\"category\": \"Ethical Dimensions of AI Content\", \"code\": \"Harm & Safety\", \"subcode\": \"Subcode 1\", \"text\": \"Segment Text 1\"}, {\"category\": \"Ethical Dimensions of AI Content\", \"code\": \"Harm & Safety\", \"subcode\": \"Subcode 2\", \"text\": \"Segment Text 2\"}, {\"category\": \"Governance & Enforcement Architecture\", \"code\": \"Accountability Structures\", \"subcode\": \"Subcode 2\", \"text\": \"Segment Text 3\"}]}]"}},{"type":"Feature","geometry":{"type":"Point","coordinates":[120.9842,14.5995]},"properties":{"country":"Philippines","continent":"Asia","org_count":1,"orgs_data":"[{\"organization\": \"Rappler\", \"type\": \"Digital Media Outlet\", \"country\": \"Philippines\", \"continent\": \"Asia\", \"last_updated\": \"2025\", \"output\": \"Online News Paper\", \"link\": \"www.google.ch\", \"categories\": [\"Rhetorical Strategies Toward AI Adoption\", \"Visual AI Scope\"], \"codes\": [\"Code 12\", \"Code 55\", \"Code 77\"], \"segments\": [{\"category\": \"Rhetorical Strategies Toward AI Adoption\", \"code\": \"Code 12\", \"subcode\": \"Subcode 8\", \"text\": \"Segment Text 4\"}, {\"category\": \"Visual AI Scope\", \"code\": \"Code 55\", \"subcode\": \"Subcode 5\", \"text\": \"Segment Text 5\"}, {\"category\": \"Visual AI Scope\", \"code\": \"Code 77\", \"subcode\": \"Subcode 17\", \"text\": \"Segment Text 6\"}]}]"}},{"type":"Feature","geometry":{"type":"Point","coordinates":[7.4474,46.9481]},"properties":{"country":"Switzerland","continent":"Europe","org_count":2,"orgs_data":"[{\"organization\": \"20 Minuten\", \"type\": \"News Company\", \"country\": \"Switzerland\", \"continent\": \"Europe\", \"last_updated\": \"2023\", \"output\": \"TBD\", \"link\": \"www.google.ch\", \"categories\": [\"Rhetorical Strategies Toward AI Adoption\", \"Visual AI Scope\"], \"codes\": [\"Legitimation / Supportive Framing\", \"Moving Images (Video/Film)\", \"Static Visuals (Images/Photos)\"], \"segments\": [{\"category\": \"Rhetorical Strategies Toward AI Adoption\", \"code\": \"Legitimation / Supportive Framing\", \"subcode\": \"\", \"text\": \"An exception is made for the illustration of articles on the subject of AI. Illustrations may be created with the help of an AI. When they are published, the AI used for that purpose must be declared.\"}, {\"category\": \"Visual AI Scope\", \"code\": \"Moving Images (Video/Film)\", \"subcode\": \"\", \"text\": \"We do not publish photorealistic (moving) images that have been generated by an AI.\"}, {\"category\": \"Visual AI Scope\", \"code\": \"Static Visuals (Images/Photos)\", \"subcode\": \"\", \"text\": \"We do not publish photorealistic (moving) images that have been generated by an AI.\"}]}, {\"organization\": \"Blick\", \"type\": \"News Company\", \"country\": \"Switzerland\", \"continent\": \"Europe\", \"last_updated\": \"2019\", \"output\": \"TBD\", \"link\": \"www.google.ch\", \"categories\": [\"Ethical Dimensions of AI Content\"], \"codes\": [\"Bias, Fairness & Representation\", \"Harm & Safety\"], \"segments\": [{\"category\": \"Ethical Dimensions of AI Content\", \"code\": \"Bias, Fairness & Representation\", \"subcode\": \"\", \"text\": \"The AI tools and technologies developed, integrated, or used by Ringier are intended to be fair, impartial, and non-discriminatory. For this reason, Ringier\\u2019s own AI tools, technologies, and integrations are regularly reviewed and adjusted where necessary.\"}, {\"category\": \"Ethical Dimensions of AI Content\", \"code\": \"Bias, Fairness & Representation\", \"subcode\": \"\", \"text\": \"The AI tools and technologies developed, integrated, or used by Ringier are intended to be fair, impartial, and non-discriminatory.\"}, {\"category\": \"Ethical Dimensions of AI Content\", \"code\": \"Harm & Safety\", \"subcode\": \"Illegal use\", \"text\": \"When using AI tools, Blick ensures that no copyrights, personality rights, data protection regulations, confidentiality obligations, or other rights and laws are infringed.\"}]}]"}},{"type":"Feature","geometry":{"type":"Point","coordinates":[16.3738,48.2082]},"properties":{"country":"Austria","continent":"Europe","org_count":1,"orgs_data":"[{\"organization\": \"APA\", \"type\": \"Agency\", \"country\": \"Austria\", \"continent\": \"Europe\", \"last_updated\": \"2026\", \"output\": \"TBD 4\", \"link\": \"www.google.ch\", \"categories\": [\"Ethical Dimensions of AI Content\", \"Governance & Enforcement Architecture\"], \"codes\": [\"Integrity & Trustworthiness (Factualness)\", \"Accountability Structures\", \"Formal Policy Embedding\"], \"segments\": [{\"category\": \"Ethical Dimensions of AI Content\", \"code\": \"Integrity & Trustworthiness (Factualness)\", \"subcode\": \"Accuracy verification\", \"text\": \"Before using AI content in products with external impact (in particular publications, newsletters \\u2026), please note that it must be contextualised, checked, and verified by humans before publication.\"}, {\"category\": \"Governance & Enforcement Architecture\", \"code\": \"Accountability Structures\", \"subcode\": \"Human in the Loop / Indiv. Responsability\", \"text\": \"Before using AI content in products with external impact (in particular publications, newsletters \\u2026), please note that it must be contextualised, checked, and verified by humans before publication.\"}, {\"category\": \"Governance & Enforcement Architecture\", \"code\": \"Formal Policy Embedding\", \"subcode\": \"\", \"text\": \"Application of the Guideline Generative AI\"}]}]"}},{"type":"Feature","geometry":{"type":"Point","coordinates":[-0.1276,51.5074]},"properties":{"country":"United Kingdom","continent":"Europe","org_count":1,"orgs_data":"[{\"organization\": \"BBC\", \"type\": \"PSM\", \"country\": \"United Kingdom\", \"continent\": \"Europe\", \"last_updated\": \"2000\", \"output\": \"TBD\", \"link\": \"www.google.ch\", \"categories\": [\"Visual AI Scope\"], \"codes\": [\"Static Visuals (Images/Photos)\"], \"segments\": [{\"category\": \"Visual AI Scope\", \"code\": \"Static Visuals (Images/Photos)\", \"subcode\": \"\", \"text\": \"Any generative AI options provided in editing software such as – but not only - 'generative fill', that allows the addition or removal of content in images or video, should only be employed where their use would not materially mislead audiences.\"}, {\"category\": \"Visual AI Scope\", \"code\": \"Static Visuals (Images/Photos)\", \"subcode\": \"\", \"text\": \"News, current affairs and factual journalism video and still images must not be manipulated beyond a sympathetic crop and minor adjustments to brightness and contrast.\"}, {\"category\": \"Visual AI Scope\", \"code\": \"Static Visuals (Images/Photos)\", \"subcode\": \"\", \"text\": \"Generative AI can be defined as a type of artificial intelligence capable of creating text, images, speech, music, video and code in response to prompts from a user....\"}]}]"}}]};
-
-
-/* ============================================================
-   MAP INITIALISATION
-   ============================================================ */
 mapboxgl.accessToken = CONFIG.accessToken;
-
 const map = new mapboxgl.Map({
-  container: 'map',
-  style:     CONFIG.styleUrl,
-  center:    CONFIG.center,
-  zoom:      CONFIG.zoom,
-  minZoom:   CONFIG.minZoom,
-  maxZoom:   CONFIG.maxZoom,
-  projection: 'globe',             // Globe view (set in Studio)
-  attributionControl: false,
+  container: 'map', style: CONFIG.styleUrl,
+  center: CONFIG.center, zoom: CONFIG.zoom,
+  minZoom: CONFIG.minZoom, maxZoom: CONFIG.maxZoom,
+  projection: 'globe', attributionControl: false,
 });
-
-// Zoom & compass controls — bottom right
 map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-
-// Attribution — compact, bottom right
 map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
 
+const ORGS_BY_COUNTRY = new Map();
+COUNTRY_DATA.features.forEach(f => {
+  ORGS_BY_COUNTRY.set(f.properties.country, f.properties.orgs);
+});
 
-/* ============================================================
-   FILTER STATE
-   ============================================================ */
-let activeCode      = 'all';
-let activeCategory  = 'all';
-let activeContinent = 'all';
-let activeType      = 'all';
-let activeOutput    = 'all';
-let orgMarkers      = [];
+let activeTypes = [], activeSubtypes = [], activeCategories = [], activeCodes = [], activeContinents = [];
 
+function getColor(continent) { return CONFIG.continentColors[continent] ?? CONFIG.defaultColor; }
+function matchAll(arr, val)  { return arr.length === 0 || arr.includes(val); }
+function matchAny(arr, list) { return arr.length === 0 || list.some(v => arr.includes(v)); }
 
-/* ============================================================
-   HELPER: get colour for a continent
-   ============================================================ */
-function getColor(continent) {
-  return CONFIG.continentColors[continent] || CONFIG.defaultColor;
+let orgListPopup = null;
+function closeOrgListPopup() { if (orgListPopup) { orgListPopup.remove(); orgListPopup = null; } }
+function closeAllMultiSelects() {
+  document.querySelectorAll('.multi-select-dropdown.open').forEach(d => d.classList.remove('open'));
 }
 
-
-/* ============================================================
-   FILTER LOGIC
-   ============================================================ */
-function filterOrgs(orgs) {
-  return orgs.filter(org => {
-    if (activeType !== 'all' && org.type !== activeType) return false;
-    if (activeOutput !== 'all' && org.output !== activeOutput) return false;
-    if (activeCategory !== 'all') {
-      const cats = org.categories || [];
-      if (!cats.includes(activeCategory)) return false;
-    }
-    if (activeCode !== 'all') {
-      const codes = org.codes || [];
-      if (!codes.includes(activeCode)) return false;
-    }
-    return true;
+function getFilteredData() {
+  const features = [];
+  COUNTRY_DATA.features.forEach(f => {
+    if (!matchAll(activeContinents, f.properties.continent)) return;
+    const allOrgs = ORGS_BY_COUNTRY.get(f.properties.country) ?? [];
+    const filtered = allOrgs.filter(org =>
+      matchAll(activeTypes, org.type) &&
+      matchAll(activeSubtypes, org.subtype) &&
+      matchAny(activeCategories, org.categories) &&
+      matchAny(activeCodes, org.codes)
+    );
+    if (!filtered.length) return;
+    features.push({ ...f, properties: { ...f.properties, org_count: filtered.length, orgs: filtered } });
   });
+  return { type: 'FeatureCollection', features };
 }
 
-function filterCountryData() {
-  return {
-    type: 'FeatureCollection',
-    features: COUNTRY_DATA.features.map(f => {
-      const orgs    = JSON.parse(f.properties.orgs_data);
-      const filtered = filterOrgs(orgs);
-      return {
-        ...f,
-        properties: {
-          ...f.properties,
-          org_count:  filtered.length,
-          orgs_data:  JSON.stringify(filtered),
-        }
-      };
-    }).filter(f => {
-      if (activeContinent !== 'all' && f.properties.continent !== activeContinent) return false;
-      return f.properties.org_count > 0;
-    })
-  };
-}
-
-
-/* ============================================================
-   STATS UPDATE
-   ============================================================ */
 function updateStats(data) {
-  const orgs      = data.features.reduce((s, f) => s + f.properties.org_count, 0);
-  const countries = data.features.length;
-  document.getElementById('stat-orgs').textContent      = orgs;
-  document.getElementById('stat-countries').textContent = countries;
-  document.getElementById('header-sub').textContent     = `${orgs} Organisations · ${countries} Countries`;
-}
-
-
-/* ============================================================
-   COUNTRY PINS (one per country, shown always)
-   ============================================================ */
-function clearOrgMarkers() {
-  orgMarkers.forEach(m => m.remove());
-  orgMarkers = [];
-}
-
-// Close all open dropdowns
-function closeAllDropdowns() {
-  document.querySelectorAll('.pin-dropdown.open').forEach(d => d.classList.remove('open'));
-}
-
-function buildPins(data) {
-  clearOrgMarkers();
-
-  data.features.forEach(feature => {
-    const props      = feature.properties;
-    const orgs       = JSON.parse(props.orgs_data);
-    const count      = orgs.length;
-    const color      = getColor(props.continent);
-    const [lng, lat] = feature.geometry.coordinates;
-
-    const wrap = document.createElement('div');
-    wrap.className = 'country-pin-wrap';
-    // No CSS transform — Mapbox offset handles positioning
-
-    // Pin head
-    const head = document.createElement('div');
-    head.className = 'pin-head';
-    head.style.background = color;
-    const num = document.createElement('span');
-    num.textContent = count;
-    head.appendChild(num);
-
-    // Pin tail
-    const tail = document.createElement('div');
-    tail.className = 'pin-tail';
-
-    // Dropdown
-    const dropdown = document.createElement('div');
-    dropdown.className = 'pin-dropdown';
-
-    orgs.forEach(org => {
-      const item = document.createElement('div');
-      item.className = 'pin-dropdown-item';
-
-      const dot = document.createElement('div');
-      dot.className = 'pin-dropdown-dot';
-      dot.style.background = color;
-
-      const name = document.createElement('div');
-      name.className = 'pin-dropdown-name';
-      name.textContent = org.organization;
-
-      item.appendChild(dot);
-      item.appendChild(name);
-
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openPopup(org);
-      });
-
-      dropdown.appendChild(item);
-    });
-
-    head.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = dropdown.classList.contains('open');
-      closeAllDropdowns();
-      if (!isOpen) dropdown.classList.add('open');
-    });
-
-    wrap.appendChild(head);
-    wrap.appendChild(tail);
-    wrap.appendChild(dropdown);
-
-    // offset [x, y]: shift up so pin tip sits on coordinate
-    // pin head = 30px + tail = 8px = 38px total, so offset y = -38
-    const marker = new mapboxgl.Marker({
-      element: wrap,
-      anchor:  'bottom',
-      offset:  [0, 8],   // tail is 8px, anchor bottom = bottom of tail
-    })
-      .setLngLat([lng, lat])
-      .addTo(map);
-
-    orgMarkers.push(marker);
+  const orgs = [], countries = [];
+  data.features.forEach(f => {
+    countries.push(f.properties.country);
+    f.properties.orgs.forEach(o => orgs.push(o.organization));
   });
-
-  // Hide pins on the back of the globe
-  updatePinVisibility();
+  document.getElementById('stat-orgs').textContent      = orgs.length;
+  document.getElementById('stat-countries').textContent = countries.length;
+  document.getElementById('header-sub').textContent     = `${orgs.length} Organisations · ${countries.length} Countries`;
+  document.getElementById('org-tooltip-list').innerHTML =
+    [...new Set(orgs)].sort().map(o => `<div class="stat-tooltip-item">${esc(o)}</div>`).join('');
+  document.getElementById('country-tooltip-list').innerHTML =
+    [...new Set(countries)].sort().map(c => `<div class="stat-tooltip-item">${esc(c)}</div>`).join('');
 }
 
-// Check which pins are on the visible side of the globe
-function updatePinVisibility() {
-  if (!map.getCenter) return;
-  const center = map.getCenter();
-  orgMarkers.forEach(marker => {
-    const lngLat  = marker.getLngLat();
-    // Calculate angular distance from map center
-    const dLng    = Math.abs(lngLat.lng - center.lng);
-    const normDLng = dLng > 180 ? 360 - dLng : dLng;
-    const dLat    = Math.abs(lngLat.lat - center.lat);
-    // Hide if more than ~90° away (on back of globe)
-    const hidden  = normDLng > 90 || dLat > 90;
-    marker.getElement().style.visibility = hidden ? 'hidden' : 'visible';
-  });
-}
-
-// Update visibility on every map move
-map.on('render', updatePinVisibility);
-
-
-/* ============================================================
-   DETAIL POPUP
-   ============================================================ */
-function openPopup(org) {
-  const segments = org.segments || [];
-
-  document.getElementById('popup-org').textContent  = org.organization;
-  document.getElementById('popup-meta').textContent = `${org.country} · ${org.continent}`;
-
-  // Filter segments by active category and/or code
-  const filteredSegs = segments.filter(s => {
-    if (activeCategory !== 'all' && s.category !== activeCategory) return false;
-    if (activeCode !== 'all' && s.code !== activeCode) return false;
-    return true;
-  });
-
-  // Unique codes as badges
-  const uniqueCodes = [...new Set(segments.map(s => s.code).filter(Boolean))];
-  const codesHTML = uniqueCodes.map(c => {
-    const isMatch = activeCode !== 'all' && c === activeCode;
-    return `<span class="code-badge${isMatch ? ' highlight' : ''}">${c}</span>`;
-  }).join('');
-
-  // Group segments by category → then by code
-  function buildGroupedSegsHTML(segs) {
-    if (!segs.length) return `<div style="font-size:12px;color:var(--color-text-muted);font-style:italic;">No segments for this filter.</div>`;
-
-    // Group by category
-    const byCategory = {};
-    segs.forEach(s => {
-      const cat = s.category || 'Other';
-      if (!byCategory[cat]) byCategory[cat] = {};
-      const code = s.code || 'Other';
-      if (!byCategory[cat][code]) byCategory[cat][code] = [];
-      byCategory[cat][code].push(s);
-    });
-
-    return Object.keys(byCategory).sort().map(cat => {
-      const byCode = byCategory[cat];
-      const codeBlocks = Object.keys(byCode).sort().map(code => {
-        const items = byCode[code].map(s =>
-          `<div class="seg-item">
-            <div class="seg-code">${code}${s.subcode ? ' › ' + s.subcode : ''}</div>
-            ${(s.text || '').substring(0, 250)}${(s.text || '').length > 250 ? '…' : ''}
-          </div>`
-        ).join('');
-        return items;
-      }).join('');
-
-      return `
-        <div class="seg-category-header">${cat}</div>
-        ${codeBlocks}
-      `;
-    }).join('');
-  }
-
-  const segsHTML = buildGroupedSegsHTML(filteredSegs);
-
-  const rawLink = org.link ? org.link.trim() : '';
-  const fullLink = rawLink && !rawLink.startsWith('http') ? 'https://' + rawLink : rawLink;
-  const linkHTML = fullLink
-    ? `<div class="info-row">
-         <div class="info-label">Link</div>
-         <div class="info-value info-link"><a href="${fullLink}" target="_blank">View Guidelines →</a></div>
-       </div>`
-    : '';
-
-  document.getElementById('popup-body').innerHTML = `
-    <div class="info-row">
-      <div class="info-label">Type</div>
-      <div class="info-value">${org.type || '—'}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">Last updated</div>
-      <div class="info-value">${org.last_updated || 'n/a'}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">Output</div>
-      <div class="info-value">${org.output ? `<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;background:var(--color-surface-subtle);border:1px solid var(--color-border-strong);color:var(--color-text-secondary)">${org.output}</span>` : '—'}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">Segments</div>
-      <div class="info-value">${segments.length} total</div>
-    </div>
-    ${linkHTML}
-    <hr class="divider">
-    <div class="codes-section">
-      <h5>Codes</h5>
-      ${codesHTML || '<span style="font-size:11px;color:var(--color-text-muted)">—</span>'}
-    </div>
-    <div class="segments-section">
-      <h5>Segments${activeCategory !== 'all' ? ' · ' + activeCategory : ''}${activeCode !== 'all' ? ' › ' + activeCode : ''}</h5>
-      ${segsHTML}
-    </div>
-  `;
-
-  const popup = document.getElementById('popup');
-  popup.style.left = '268px';
-  popup.style.top  = '80px';
-  popup.classList.add('visible');
-}
-
-document.getElementById('popup-close').addEventListener('click', () => {
-  document.getElementById('popup').classList.remove('visible');
-});
-
-
-/* ============================================================
-   MAP LOAD
-   ============================================================ */
-map.on('load', () => {
-  buildPins(COUNTRY_DATA);
-  updateStats(COUNTRY_DATA);
-});
-
-// Click on map background → close popup + dropdowns
-map.on('click', () => {
-  document.getElementById('popup').classList.remove('visible');
-  closeAllDropdowns();
-});
-
-
-/* ============================================================
-   INFO MODAL
-   ============================================================ */
-document.getElementById('info-btn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  document.getElementById('info-modal').classList.toggle('visible');
-});
-document.getElementById('info-modal-close').addEventListener('click', () => {
-  document.getElementById('info-modal').classList.remove('visible');
-});
-
-
-/* ============================================================
-   CONTINENT → MAP POSITION
-   ============================================================ */
-const CONTINENT_VIEWS = {
-  'all':           { center: [-40, 20],   zoom: 1.8 },
-  'Europe':        { center: [15,  54],   zoom: 3.5 },
-  'North America': { center: [-95, 45],   zoom: 3.0 },
-  'South America': { center: [-60, -15],  zoom: 3.0 },
-  'Asia':          { center: [95,  35],   zoom: 3.0 },
-  'Oceania':       { center: [140, -25],  zoom: 3.5 },
-};
-
-
-/* ============================================================
-   FILTER EVENTS
-   ============================================================ */
 function applyFilters() {
   document.getElementById('popup').classList.remove('visible');
-  const filtered = filterCountryData();
-  buildPins(filtered);           // rebuild pins with filtered data
+  closeOrgListPopup(); closeAllMultiSelects();
+  const filtered = getFilteredData();
+  if (map.getSource('countries')) map.getSource('countries').setData(filtered);
   updateStats(filtered);
 }
 
-// Thematic Focus chips (Guideline Category)
-document.getElementById('category-filters').addEventListener('click', (e) => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-  document.querySelectorAll('#category-filters .chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  activeCategory = chip.dataset.category;
-  applyFilters();
-});
-
-// Thematic code chips
-document.getElementById('code-filters').addEventListener('click', (e) => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-  document.querySelectorAll('#code-filters .chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  activeCode = chip.dataset.code;
-  applyFilters();
-});
-
-// Continent chips → filter + fly to region
-document.getElementById('continent-filters').addEventListener('click', (e) => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-  document.querySelectorAll('#continent-filters .chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  activeContinent = chip.dataset.continent;
-  applyFilters();
-  // Fly to continent
-  const view = CONTINENT_VIEWS[activeContinent] || CONTINENT_VIEWS['all'];
-  map.flyTo({ center: view.center, zoom: view.zoom, duration: 1200 });
-});
-
-// Output dropdown
-document.getElementById('output-filter').addEventListener('change', (e) => {
-  activeOutput = e.target.value;
-  applyFilters();
-});
-
-// Type dropdown
-document.getElementById('type-filter').addEventListener('change', (e) => {
-  activeType = e.target.value;
-  applyFilters();
-});
-
-// Reset
-document.getElementById('reset-btn').addEventListener('click', () => {
-  activeCode      = 'all';
-  activeCategory  = 'all';
-  activeContinent = 'all';
-  activeType      = 'all';
-  activeOutput    = 'all';
-  document.querySelectorAll('.chip').forEach(c => {
-    if (c.dataset.code === 'all' || c.dataset.continent === 'all' || c.dataset.category === 'all') c.classList.add('active');
-    else c.classList.remove('active');
+map.on('load', () => {
+  const initial = getFilteredData();
+  map.addSource('countries', { type: 'geojson', data: initial, generateId: true });
+  map.addLayer({
+    id: 'country-glow', type: 'circle', source: 'countries',
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['get', 'org_count'], 1, 20, 5, 28, 20, 38],
+      'circle-color':  ['match', ['get', 'continent'],
+        'Europe','#2563eb','North America','#d97706','South America','#059669','Asia','#dc2626','Oceania','#0891b2','#7c3aed'],
+      'circle-opacity': 0.12, 'circle-blur': 1.2,
+    },
   });
-  document.getElementById('type-filter').value   = 'all';
-  document.getElementById('output-filter').value = 'all';
+  map.addLayer({
+    id: 'country-circles', type: 'circle', source: 'countries',
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['get', 'org_count'], 1, 11, 5, 15, 20, 21],
+      'circle-color':  ['match', ['get', 'continent'],
+        'Europe','#2563eb','North America','#d97706','South America','#059669','Asia','#dc2626','Oceania','#0891b2','#7c3aed'],
+      'circle-opacity': 0.92, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.85)',
+    },
+  });
+  map.addLayer({
+    id: 'country-labels', type: 'symbol', source: 'countries',
+    layout: { 'text-field': ['to-string', ['get', 'org_count']], 'text-size': 11,
+              'text-font': ['DIN Pro Bold', 'Arial Unicode MS Regular'], 'text-allow-overlap': true },
+    paint: { 'text-color': '#ffffff', 'text-halo-color': 'rgba(0,0,0,0.15)', 'text-halo-width': 0.5 },
+  });
+  updateStats(initial);
+  map.on('mouseenter', 'country-circles', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'country-circles', () => { map.getCanvas().style.cursor = ''; });
+});
+
+map.on('click', 'country-circles', e => {
+  e.preventDefault();
+  const feature = e.features[0];
+  const country = feature.properties.country;
+  const color   = getColor(feature.properties.continent);
+  const allOrgs = ORGS_BY_COUNTRY.get(country) ?? [];
+  const orgs    = allOrgs.filter(org =>
+    matchAll(activeTypes, org.type) && matchAll(activeSubtypes, org.subtype) &&
+    matchAny(activeCategories, org.categories) && matchAny(activeCodes, org.codes)
+  );
+  closeOrgListPopup();
+  const listHTML = [...orgs].sort((a, b) => a.organization.localeCompare(b.organization))
+    .map(org => `<div class="org-list-item" data-org="${esc(org.organization)}" data-country="${esc(org.country)}">
+      <div class="org-list-dot" style="background:${color}"></div>${esc(org.organization)}</div>`).join('');
+  orgListPopup = new mapboxgl.Popup({ closeButton: false, offset: 15 })
+    .setLngLat(e.lngLat).setHTML(listHTML).addTo(map);
+  orgListPopup.getElement().addEventListener('click', ev => {
+    const item = ev.target.closest('.org-list-item');
+    if (!item) return;
+    const org = (ORGS_BY_COUNTRY.get(item.dataset.country) ?? []).find(o => o.organization === item.dataset.org);
+    if (org) openPopup(org);
+  });
+});
+
+map.on('click', e => {
+  if (!map.queryRenderedFeatures(e.point, { layers: ['country-circles'] }).length) {
+    closeOrgListPopup();
+    document.getElementById('popup').classList.remove('visible');
+  }
+});
+
+function openPopup(org) {
+  const segments = org.segments ?? [];
+  document.getElementById('popup-org').textContent  = org.organization;
+  document.getElementById('popup-meta').textContent = `${org.country} · ${org.continent}`;
+  const filteredSegs = segments.filter(s =>
+    (activeCategories.length === 0 || activeCategories.includes(s.category)) &&
+    (activeCodes.length === 0 || activeCodes.includes(s.code))
+  );
+  const uniqueCodes = [...new Set(segments.map(s => s.code).filter(Boolean))];
+  const codesHTML = uniqueCodes.map(c => {
+    const hi = activeCodes.length > 0 && activeCodes.includes(c);
+    return `<span class="code-badge${hi?' highlight':''}">${esc(c)}</span>`;
+  }).join('');
+  function buildSegsHTML(segs) {
+    if (!segs.length) return '<div style="font-size:12px;color:var(--text-muted);font-style:italic;">No segments for this filter.</div>';
+    const byCat = {};
+    segs.forEach(s => { const cat = s.category||'Other', code = s.code||'Other'; (byCat[cat]??={})[code]??=[]; byCat[cat][code].push(s); });
+    return Object.keys(byCat).sort().map(cat =>
+      `<div class="seg-category-header">${esc(cat)}</div>` +
+      Object.keys(byCat[cat]).sort().map(code =>
+        byCat[cat][code].map(s =>
+          `<div class="seg-item"><div class="seg-code">${esc(code)}${s.subcode?` › ${esc(s.subcode)}`:''}</div>${esc(s.text)}</div>`
+        ).join('')
+      ).join('')
+    ).join('');
+  }
+  const linksHTML = (org.links ?? []).map((lnk, i) => {
+    const href = lnk.startsWith('http') ? lnk : `https://${lnk}`;
+    const label = org.links.length > 1 ? `Link ${i+1}` : 'Link';
+    return `<div class="info-row"><div class="info-label">${label}</div><div class="info-value info-link"><a href="${esc(href)}" target="_blank" rel="noopener noreferrer">View Guidelines →</a></div></div>`;
+  }).join('');
+  document.getElementById('popup-body').innerHTML = `
+    <div class="info-row"><div class="info-label">Type</div><div class="info-value">${esc(org.type)}${org.subtype&&org.subtype!==org.type?` <span style="color:var(--text-muted)">(${esc(org.subtype)})</span>`:''}</div></div>
+    <div class="info-row"><div class="info-label">Last Updated</div><div class="info-value">${esc(org.last_updated||'n/a')}</div></div>
+    <div class="info-row"><div class="info-label">Segments</div><div class="info-value">${segments.length} total</div></div>
+    ${linksHTML}
+    <hr class="divider">
+    <div class="codes-section"><h5>Codes</h5>${codesHTML||'<span style="font-size:11px;color:var(--text-muted)">—</span>'}</div>
+    <div class="segments-section"><h5>Segments</h5>${buildSegsHTML(filteredSegs)}</div>`;
+  const popup = document.getElementById('popup');
+  popup.style.left = '278px'; popup.style.top = '16px';
+  popup.classList.add('visible');
+}
+
+document.getElementById('popup-close').addEventListener('click', () => document.getElementById('popup').classList.remove('visible'));
+document.getElementById('info-btn').addEventListener('click', e => { e.stopPropagation(); document.getElementById('info-modal').classList.toggle('visible'); });
+document.getElementById('info-modal-close').addEventListener('click', () => document.getElementById('info-modal').classList.remove('visible'));
+document.getElementById('org-info-btn').addEventListener('click', e => { e.stopPropagation(); document.getElementById('country-tooltip').classList.remove('open'); document.getElementById('org-tooltip').classList.toggle('open'); });
+document.getElementById('country-info-btn').addEventListener('click', e => { e.stopPropagation(); document.getElementById('org-tooltip').classList.remove('open'); document.getElementById('country-tooltip').classList.toggle('open'); });
+
+const CONTINENT_VIEWS = {
+  'all':           { center: [-40, 30],  zoom: 1.8 },
+  'Europe':        { center: [15,  54],  zoom: 3.5 },
+  'North America': { center: [-95, 45],  zoom: 3.0 },
+  'South America': { center: [-60, -15], zoom: 3.0 },
+  'Asia':          { center: [95,  35],  zoom: 3.0 },
+  'Oceania':       { center: [140, -25], zoom: 3.5 },
+};
+
+function setupMultiSelect(dropdownId, btnId, labelId, allLabel, onChange) {
+  const dropdown = document.getElementById(dropdownId);
+  const btn = document.getElementById(btnId);
+  const label = document.getElementById(labelId);
+  let selected = [];
+  dropdown.addEventListener('click', e => {
+    e.stopPropagation();
+    const opt = e.target.closest('.multi-select-option');
+    if (!opt) return;
+    const val = opt.dataset.value;
+    if (val === 'all') {
+      selected = [];
+      dropdown.querySelectorAll('.multi-select-option').forEach(o => {
+        const isAll = o.dataset.value === 'all';
+        o.classList.toggle('selected', isAll);
+        o.querySelector('.check').textContent = isAll ? '✓' : '';
+      });
+    } else {
+      dropdown.querySelector('[data-value="all"]').classList.remove('selected');
+      dropdown.querySelector('[data-value="all"]').querySelector('.check').textContent = '';
+      const idx = selected.indexOf(val);
+      if (idx > -1) { selected.splice(idx, 1); opt.classList.remove('selected'); opt.querySelector('.check').textContent = ''; }
+      else          { selected.push(val); opt.classList.add('selected'); opt.querySelector('.check').textContent = '✓'; }
+      if (!selected.length) { dropdown.querySelector('[data-value="all"]').classList.add('selected'); dropdown.querySelector('[data-value="all"]').querySelector('.check').textContent = '✓'; }
+    }
+    label.textContent = selected.length ? `${selected.length} selected` : allLabel;
+    onChange(selected);
+  });
+  btn.addEventListener('click', e => { e.stopPropagation(); closeAllMultiSelects(); dropdown.classList.toggle('open'); });
+  return { reset() { selected = []; dropdown.querySelectorAll('.multi-select-option').forEach(o => { const isAll = o.dataset.value==='all'; o.classList.toggle('selected',isAll); o.querySelector('.check').textContent = isAll?'✓':''; }); label.textContent = allLabel; } };
+}
+
+function setupChipFilter(containerId, onChange) {
+  const container = document.getElementById(containerId);
+  let selected = [];
+  container.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    const val = chip.dataset.value;
+    if (val === 'all') {
+      selected = [];
+      container.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value==='all'));
+    } else {
+      container.querySelector('[data-value="all"]').classList.remove('active');
+      chip.classList.toggle('active');
+      if (chip.classList.contains('active')) selected.push(val);
+      else selected = selected.filter(v => v !== val);
+      if (!selected.length) container.querySelector('[data-value="all"]').classList.add('active');
+    }
+    onChange(selected);
+  });
+  return { reset() { selected = []; container.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value==='all')); } };
+}
+
+const typeFilter     = setupChipFilter('type-filters',     vals => { activeTypes = vals; applyFilters(); });
+const categoryFilter = setupChipFilter('category-filters', vals => { activeCategories = vals; applyFilters(); });
+const continentFilter = setupChipFilter('continent-filters', vals => {
+  activeContinents = vals;
+  if (vals.length === 1) { const v = CONTINENT_VIEWS[vals[0]]||CONTINENT_VIEWS['all']; map.flyTo({ center: v.center, zoom: v.zoom, duration: 1200 }); }
+  else if (!vals.length) map.flyTo({ center: CONFIG.center, zoom: CONFIG.zoom, duration: 1200 });
   applyFilters();
 });
-</script>
+const subtypeFilter = setupMultiSelect('subtype-dropdown','subtype-btn','subtype-label','All Subtypes', vals => { activeSubtypes = vals; applyFilters(); });
+const codeFilter    = setupMultiSelect('code-dropdown',   'code-btn',   'code-label',   'All Codes',    vals => { activeCodes = vals; applyFilters(); });
 
+document.getElementById('reset-btn').addEventListener('click', () => {
+  activeTypes=[]; activeSubtypes=[]; activeCategories=[]; activeCodes=[]; activeContinents=[];
+  typeFilter.reset(); subtypeFilter.reset(); categoryFilter.reset(); codeFilter.reset(); continentFilter.reset();
+  map.flyTo({ center: CONFIG.center, zoom: CONFIG.zoom, duration: 1200 });
+  applyFilters();
+});
+
+document.addEventListener('click', () => {
+  closeAllMultiSelects();
+  document.getElementById('org-tooltip').classList.remove('open');
+  document.getElementById('country-tooltip').classList.remove('open');
+  document.getElementById('info-modal').classList.remove('visible');
+});
+document.getElementById('filters').addEventListener('click', e => e.stopPropagation());
+document.getElementById('popup').addEventListener('click', e => e.stopPropagation());
+document.getElementById('info-modal').addEventListener('click', e => e.stopPropagation());
+document.getElementById('stats').addEventListener('click', e => e.stopPropagation());
+</script>
 </body>
 </html>
