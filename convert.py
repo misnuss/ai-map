@@ -3,7 +3,7 @@ import json
 from collections import defaultdict
 from datetime import datetime
 
-# 1. Excel-Datei einlesen
+# 1. Excel-Datei laden
 wb = openpyxl.load_workbook("AI_Guidelines_Master_Git.xlsx", read_only=True)
 ws = wb.active
 headers = []
@@ -20,7 +20,7 @@ for r in rows:
         by_country[r['country']].append(r)
 
 features = []
-# 2. Daten verarbeiten und strukturieren
+# 2. Daten verarbeiten
 for country, country_rows in by_country.items():
     first = country_rows[0]
     by_org = defaultdict(list)
@@ -34,7 +34,6 @@ for country, country_rows in by_country.items():
         lu = fo.get('last_updated')
         last_updated = str(lu.year) if isinstance(lu, datetime) else str(lu) if lu else ''
         
-        # Links aus link1 und link2 sauber zusammentragen
         links = [str(lk).strip() for lk in [fo.get('link1'), fo.get('link2')]
                  if lk and str(lk).strip() and not str(lk).startswith('chrome-extension')]
                  
@@ -66,14 +65,14 @@ for country, country_rows in by_country.items():
             "continent": str(first.get('continent','')),
             "city": str(first.get('city','')), 
             "org_count": len(orgs), 
-            "orgs": orgs  # Werden als direktes Objekt gespeichert
+            "orgs": orgs  # Direkte Objektübergabe passend zur index.html
         }
     })
 
 geojson = {"type": "FeatureCollection", "features": features}
 
-# 3. Direkt als data.js abspeichern (Wichtig für das fehlerfreie Laden)
+# 3. data.js schreiben
 with open("data.js", "w", encoding="utf-8") as f:
     f.write(f"const COUNTRY_DATA = {json.dumps(geojson, ensure_ascii=False)};")
 
-print(f"✅ {len(features)} Länder, {sum(len(f['properties']['orgs']) for f in features)} Organisationen konvertiert.")
+print(f"✅ {len(features)} Länder konvertiert.")
