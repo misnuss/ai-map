@@ -8,9 +8,6 @@
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet"/>
 <script src="data.js"></script>
 <style>
-/* ============================================================
-   DESIGN TOKENS — change here, applies everywhere
-   ============================================================ */
 :root {
   --primary:        #1d4ed8;
   --primary-light:  #dbeafe;
@@ -31,12 +28,40 @@
   --popup-w:        340px;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:var(--font); font-size:14px; color:var(--text); background:#e8edf2; overflow: hidden; }
+body { font-family:var(--font); font-size:14px; color:var(--text); background:#e8edf2; }
 #map { position:absolute; inset:0; }
 
-/* ============================================================
-   HEADER
-   ============================================================ */
+/* ── MOBILE BANNER (soft, not a wall) ── */
+#mobile-banner {
+  display:none;
+  position:fixed; top:0; left:0; right:0; z-index:99999;
+  background:#1e3a8a; color:#fff;
+  padding:10px 16px; font-size:13px; text-align:center;
+  gap:8px; align-items:center; justify-content:center;
+}
+#mobile-banner span { flex:1; }
+#mobile-banner button {
+  background:rgba(255,255,255,.2); border:none; color:#fff;
+  border-radius:4px; padding:4px 10px; font-size:12px; cursor:pointer;
+}
+@media (max-width:768px) { #mobile-banner { display:flex; } }
+
+/* ── MOBILE FILTER TOGGLE ── */
+#filter-toggle {
+  display:none;
+  position:absolute; top:16px; left:16px; z-index:20;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:8px 14px;
+  box-shadow:var(--shadow); cursor:pointer;
+  font-size:13px; font-family:var(--font); color:var(--text);
+}
+@media (max-width:768px) {
+  #filter-toggle { display:flex; align-items:center; gap:6px; }
+  #filters { display:none; top:56px; }
+  #filters.mobile-open { display:block; }
+}
+
+/* ── HEADER ── */
 #header {
   position:absolute; top:16px; left:50%; transform:translateX(-50%);
   z-index:10; background:var(--surface); border:1px solid var(--border);
@@ -45,20 +70,20 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 }
 #header h1 { font-size:15px; font-weight:700; }
 #header p  { font-size:12px; color:var(--text-sec); margin-top:2px; }
+@media (max-width:768px) {
+  #header { left:50%; transform:translateX(-50%); top:56px; white-space:normal; max-width:calc(100vw - 32px); }
+}
 
-/* ============================================================
-   FILTER PANEL & MOBILE SLIDEOUT
-   ============================================================ */
+/* ── FILTER PANEL ── */
 #filters {
   position:absolute; top:16px; left:16px; z-index:10;
   background:var(--surface); border:1px solid var(--border);
   border-radius:var(--radius); padding:14px; width:var(--panel-w);
   box-shadow:var(--shadow); max-height:calc(100vh - 120px); overflow-y:auto;
-  transition: transform 0.3s ease;
 }
 #filters::-webkit-scrollbar { width:4px; }
 #filters::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:2px; }
-.filter-title { font-size:12px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.filter-title { font-size:12px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
 .filter-section { margin-bottom:12px; }
 .filter-label {
   font-size:10px; font-weight:600; color:var(--text-sec);
@@ -72,9 +97,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   font-family:var(--font);
 }
 .chip:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-light); }
-.chip.active, .chip[aria-pressed="true"] {
-  background:var(--primary); border-color:var(--primary); color:#fff;
-}
+.chip.active { background:var(--primary); border-color:var(--primary); color:#fff; }
 .multi-select { position:relative; }
 .multi-select-btn {
   width:100%; background:var(--surface-subtle); border:1px solid var(--border-strong);
@@ -111,19 +134,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 }
 #reset-btn:hover { background:var(--primary-light); border-color:var(--primary); color:var(--primary); }
 
-/* Mobile Elemente */
-#mobile-filter-close { display: none; background: none; border: none; font-size: 16px; color: var(--text-muted); cursor: pointer; }
-#mobile-filter-trigger {
-  display: none; position: absolute; bottom: 24px; right: 16px; z-index: 99;
-  background: var(--primary); color: #fff; border: none; padding: 12px 20px;
-  font-size: 13px; font-weight: 700; border-radius: 30px; cursor: pointer;
-  box-shadow: var(--shadow-lg); transition: background 0.2s;
-}
-#mobile-filter-trigger:hover { background: var(--primary-dark); }
-
-/* ============================================================
-   STATS
-   ============================================================ */
+/* ── STATS ── */
 #stats {
   position:absolute; bottom:30px; left:16px; z-index:10;
   background:var(--surface); border:1px solid var(--border);
@@ -158,9 +169,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 }
 .stat-tooltip-item:last-child { border-bottom:none; }
 
-/* ============================================================
-   LEGEND
-   ============================================================ */
+/* ── LEGEND ── */
 #legend {
   position:absolute; bottom:30px; right:50px; z-index:10;
   background:var(--surface); border:1px solid var(--border);
@@ -180,9 +189,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   border:1.5px solid rgba(255,255,255,.8); box-shadow:0 1px 3px rgba(0,0,0,.2);
 }
 
-/* ============================================================
-   INFO BUTTON + MODAL
-   ============================================================ */
+/* ── INFO BUTTON + MODAL ── */
 #info-btn {
   position:absolute; top:16px; right:16px; z-index:10;
   width:34px; height:34px; border-radius:50%;
@@ -206,9 +213,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   font-size:16px; color:var(--text-muted); cursor:pointer;
 }
 
-/* ============================================================
-   MAPBOX ORG-LIST POPUP
-   ============================================================ */
+/* ── ORG LIST POPUP ── */
 .mapboxgl-popup-content {
   padding:0 !important; border-radius:8px !important;
   box-shadow:0 4px 18px rgba(0,0,0,.14) !important;
@@ -226,9 +231,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 .org-list-item:hover { background:#eff6ff; color:#1d4ed8; }
 .org-list-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
-/* ============================================================
-   DETAIL POPUP (infobox)
-   ============================================================ */
+/* ── DETAIL POPUP ── */
 #popup {
   position:absolute; z-index:100; background:var(--surface);
   border:1px solid var(--border); border-radius:var(--radius);
@@ -255,7 +258,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 .info-value { font-size:12px; color:var(--text); }
 .info-link a { font-size:12px; color:var(--primary); text-decoration:none; }
 .info-link a:hover { color:var(--primary-dark); text-decoration:underline; }
-.grid-divider { border:none; border-top:1px solid var(--border); margin:10px 0; }
+.divider { border:none; border-top:1px solid var(--border); margin:10px 0; }
 .codes-section h5, .segments-section h5 {
   font-size:10px; font-weight:600; color:var(--text-sec);
   text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;
@@ -281,173 +284,151 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   border-top-left-radius:0; border-bottom-left-radius:0;
 }
 .seg-code { font-size:10px; font-weight:600; color:var(--primary); margin-bottom:3px; }
-
-/* ============================================================
-   IMPRINT (Impressum - Sauber unten mittig positioniert)
-   ============================================================ */
-#imprint {
-  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-  z-index: 10; font-size: 11px; color: var(--text-sec); text-align: center;
-  background: rgba(255, 255, 255, 0.85); padding: 5px 14px;
-  border-radius: 20px; border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: var(--shadow); white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
-}
-
-/* ============================================================
-   RESPONSIVE DESIGN (Media Queries für Smartphones)
-   ============================================================ */
-@media (max-width: 768px) {
-  #header { width: calc(100% - 32px); white-space: normal; padding: 8px 12px; top: 12px; }
-  #header h1 { font-size: 13px; }
-  #header p { font-size: 10px; }
-  
-  #filters {
-    position: fixed; top: 0; left: 0; bottom: 0; height: 100vh;
-    max-height: 100vh; width: 280px; border-radius: 0; border: none;
-    transform: translateX(-100%); box-shadow: var(--shadow-lg); z-index: 10000;
-  }
-  #filters.open { transform: translateX(0); }
-  #mobile-filter-close { display: block; }
-  #mobile-filter-trigger { display: block; }
-  
-  #stats { bottom: auto; top: 110px; left: 16px; box-shadow: var(--shadow); }
-  #legend { display: none; }
-  #imprint { display: none; }
-  #popup { width: calc(100% - 32px); left: 16px !important; bottom: 16px; top: auto !important; max-height: 50vh; }
-}
 </style>
 </head>
 <body>
 
-<div id="map" role="main" aria-label="Interactive world map of AI guidelines"></div>
+<!-- MOBILE BANNER -->
+<div id="mobile-banner">
+  <span>🗺️ This map works best on desktop — you can still browse on mobile.</span>
+  <button onclick="document.getElementById('mobile-banner').style.display='none'">✕</button>
+</div>
 
-<button id="mobile-filter-trigger" aria-label="Open Filters">Filter 🔍</button>
+<!-- MOBILE FILTER TOGGLE -->
+<button id="filter-toggle" onclick="document.getElementById('filters').classList.toggle('mobile-open')">
+  🔍 Filter
+</button>
 
-<div id="header" role="banner">
+<div id="map"></div>
+
+<!-- HEADER -->
+<div id="header">
   <h1>🌍 AI Guidelines in Media — World Map</h1>
   <p id="header-sub">Loading…</p>
 </div>
 
-<button id="info-btn" title="About this project" aria-label="About this project">i</button>
+<!-- INFO BUTTON -->
+<button id="info-btn" title="About this project">i</button>
 
-<div id="info-modal" role="dialog" aria-modal="true" aria-label="About this project">
-  <button id="info-modal-close" aria-label="Close">✕</button>
+<!-- INFO MODAL -->
+<div id="info-modal">
+  <button id="info-modal-close">✕</button>
   <h2>About this Project</h2>
   <p>This map visualises AI guidelines published by media organisations worldwide.</p>
   <p>Click a country pin to see the organisations active there, then click an organisation name to read their guidelines and coded segments.</p>
   <p>Use the filters on the left to narrow results by organisation type, guideline category, code, or continent.</p>
 </div>
 
-<nav id="filters" aria-label="Map filters">
-  <div class="filter-title">
-    <span>🔍 Filter</span>
-    <button id="mobile-filter-close" aria-label="Close Filters">✕</button>
-  </div>
+<!-- FILTER PANEL -->
+<nav id="filters">
+  <div class="filter-title">🔍 Filter</div>
 
   <div class="filter-section">
-    <div class="filter-label" id="lbl-type">Organisation Type</div>
-    <div class="filter-chips" id="type-filters" role="group" aria-labelledby="lbl-type">
-      <button class="chip active" data-value="all" aria-pressed="true">All</button>
-      <button class="chip" data-value="News Media" aria-pressed="false">News Media</button>
-      <button class="chip" data-value="Commercial/Private Media" aria-pressed="false">Commercial / Private Media</button>
-      <button class="chip" data-value="Governance Body" aria-pressed="false">Governance Body</button>
-      <button class="chip" data-value="NGO / Coalition" aria-pressed="false">NGO / Coalition</button>
+    <div class="filter-label">Organisation Type</div>
+    <div class="filter-chips" id="type-filters">
+      <button class="chip active" data-value="all">All</button>
+      <button class="chip" data-value="News Media">News Media</button>
+      <button class="chip" data-value="Commercial/Private Media">Commercial / Private Media</button>
+      <button class="chip" data-value="Governance Body">Governance Body</button>
+      <button class="chip" data-value="NGO / Coalition">NGO / Coalition</button>
     </div>
   </div>
 
   <div class="filter-section">
     <div class="filter-label">Organisation Subtype</div>
     <div class="multi-select" id="subtype-select">
-      <button class="multi-select-btn" id="subtype-btn" aria-haspopup="listbox" aria-expanded="false">
-        <span id="subtype-label">All Subtypes</span><span aria-hidden="true">▾</span>
+      <button class="multi-select-btn" id="subtype-btn">
+        <span id="subtype-label">All Subtypes</span><span>▾</span>
       </button>
-      <div class="multi-select-dropdown" id="subtype-dropdown" role="listbox" aria-multiselectable="true">
-        <div class="multi-select-option selected" data-value="all" role="option" aria-selected="true"><div class="check">✓</div>All</div>
-        <div class="multi-select-option" data-value="Public Service Media" role="option" aria-selected="false"><div class="check"></div>Public Service Media</div>
-        <div class="multi-select-option" data-value="Digital News Outlet" role="option" aria-selected="false"><div class="check"></div>Digital News Outlet</div>
-        <div class="multi-select-option" data-value="Legacy Media" role="option" aria-selected="false"><div class="check"></div>Legacy Media</div>
-        <div class="multi-select-option" data-value="News Agency" role="option" aria-selected="false"><div class="check"></div>News Agency</div>
-        <div class="multi-select-option" data-value="Media Tech Company" role="option" aria-selected="false"><div class="check"></div>Media Tech Company</div>
-        <div class="multi-select-option" data-value="Image Stock Platform" role="option" aria-selected="false"><div class="check"></div>Image Stock Platform</div>
-        <div class="multi-select-option" data-value="Press Council" role="option" aria-selected="false"><div class="check"></div>Press Council</div>
-        <div class="multi-select-option" data-value="Regulator" role="option" aria-selected="false"><div class="check"></div>Regulator</div>
-        <div class="multi-select-option" data-value="NGO / Coalition" role="option" aria-selected="false"><div class="check"></div>NGO / Coalition</div>
-        <div class="multi-select-option" data-value="Commercial/Private Media" role="option" aria-selected="false"><div class="check"></div>Commercial/Private Media</div>
+      <div class="multi-select-dropdown" id="subtype-dropdown">
+        <div class="multi-select-option selected" data-value="all"><div class="check">✓</div>All</div>
+        <div class="multi-select-option" data-value="Public Service Media"><div class="check"></div>Public Service Media</div>
+        <div class="multi-select-option" data-value="Digital News Outlet"><div class="check"></div>Digital News Outlet</div>
+        <div class="multi-select-option" data-value="Legacy Media"><div class="check"></div>Legacy Media</div>
+        <div class="multi-select-option" data-value="News Agency"><div class="check"></div>News Agency</div>
+        <div class="multi-select-option" data-value="Media Tech Company"><div class="check"></div>Media Tech Company</div>
+        <div class="multi-select-option" data-value="Image Stock Platform"><div class="check"></div>Image Stock Platform</div>
+        <div class="multi-select-option" data-value="Press Council"><div class="check"></div>Press Council</div>
+        <div class="multi-select-option" data-value="Regulator"><div class="check"></div>Regulator</div>
+        <div class="multi-select-option" data-value="NGO / Coalition"><div class="check"></div>NGO / Coalition</div>
+        <div class="multi-select-option" data-value="Commercial/Private Media"><div class="check"></div>Commercial/Private Media</div>
       </div>
     </div>
   </div>
 
   <div class="filter-section">
-    <div class="filter-label" id="lbl-cat">Guideline Category</div>
-    <div class="filter-chips" id="category-filters" role="group" aria-labelledby="lbl-cat">
-      <button class="chip active" data-value="all" aria-pressed="true">All</button>
-      <button class="chip" data-value="Ethical Dimensions of AI Content" aria-pressed="false">Ethical</button>
-      <button class="chip" data-value="Governance & Enforcement Architecture" aria-pressed="false">Governance</button>
-      <button class="chip" data-value="Rhetorical Strategies Toward AI Adoption" aria-pressed="false">Rhetorical</button>
-      <button class="chip" data-value="Visual AI Scope" aria-pressed="false">Visual AI</button>
-      <button class="chip" data-value="New Codes" aria-pressed="false">New Codes</button>
+    <div class="filter-label">Guideline Category</div>
+    <div class="filter-chips" id="category-filters">
+      <button class="chip active" data-value="all">All</button>
+      <button class="chip" data-value="Ethical Dimensions of AI Content">Ethical</button>
+      <button class="chip" data-value="Governance & Enforcement Architecture">Governance</button>
+      <button class="chip" data-value="Rhetorical Strategies Toward AI Adoption">Rhetorical</button>
+      <button class="chip" data-value="Visual AI Scope">Visual AI</button>
+      <button class="chip" data-value="New Codes">New Codes</button>
     </div>
   </div>
 
   <div class="filter-section">
     <div class="filter-label">Code</div>
     <div class="multi-select" id="code-select">
-      <button class="multi-select-btn" id="code-btn" aria-haspopup="listbox" aria-expanded="false">
-        <span id="code-label">All Codes</span><span aria-hidden="true">▾</span>
+      <button class="multi-select-btn" id="code-btn">
+        <span id="code-label">All Codes</span><span>▾</span>
       </button>
-      <div class="multi-select-dropdown" id="code-dropdown" role="listbox" aria-multiselectable="true">
-        <div class="multi-select-option selected" data-value="all" role="option" aria-selected="true"><div class="check">✓</div>All</div>
-        <div class="multi-select-option" data-value="Harm &amp; Safety" role="option" aria-selected="false"><div class="check"></div>Harm &amp; Safety</div>
-        <div class="multi-select-option" data-value="Transparency &amp; Disclosure" role="option" aria-selected="false"><div class="check"></div>Transparency &amp; Disclosure</div>
-        <div class="multi-select-option" data-value="Intellectual Property &amp; Copyright" role="option" aria-selected="false"><div class="check"></div>IP &amp; Copyright</div>
-        <div class="multi-select-option" data-value="Bias, Fairness &amp; Representation" role="option" aria-selected="false"><div class="check"></div>Bias &amp; Fairness</div>
-        <div class="multi-select-option" data-value="Integrity &amp; Trustworthiness (Factualness)" role="option" aria-selected="false"><div class="check"></div>Integrity</div>
-        <div class="multi-select-option" data-value="Accountability Structures" role="option" aria-selected="false"><div class="check"></div>Accountability</div>
-        <div class="multi-select-option" data-value="Formal Policy Embedding" role="option" aria-selected="false"><div class="check"></div>Formal Policy</div>
-        <div class="multi-select-option" data-value="Governance &amp; Monitoring Mechanisms" role="option" aria-selected="false"><div class="check"></div>Governance Mechanisms</div>
-        <div class="multi-select-option" data-value="Static Visuals (Images/Photos)" role="option" aria-selected="false"><div class="check"></div>Static Visuals</div>
-        <div class="multi-select-option" data-value="Moving Images (Video/Film)" role="option" aria-selected="false"><div class="check"></div>Moving Images</div>
-        <div class="multi-select-option" data-value="(Info)graphics &amp; Illustrations" role="option" aria-selected="false"><div class="check"></div>(Info)graphics</div>
-        <div class="multi-select-option" data-value="Constraint / Prohibitive Framing" role="option" aria-selected="false"><div class="check"></div>Constraint Framing</div>
-        <div class="multi-select-option" data-value="Legitimation / Supportive Framing" role="option" aria-selected="false"><div class="check"></div>Legitimation Framing</div>
-        <div class="multi-select-option" data-value="Dynamicity of guidelines regarding visuals" role="option" aria-selected="false"><div class="check"></div>Dynamicity</div>
-        <div class="multi-select-option" data-value="No replacement of humans" role="option" aria-selected="false"><div class="check"></div>No replacement of humans</div>
-        <div class="multi-select-option" data-value="Train employees" role="option" aria-selected="false"><div class="check"></div>Train employees</div>
-        <div class="multi-select-option" data-value="NEW: Same rules for external partners who provide services" role="option" aria-selected="false"><div class="check"></div>Same rules for partners</div>
+      <div class="multi-select-dropdown" id="code-dropdown">
+        <div class="multi-select-option selected" data-value="all"><div class="check">✓</div>All</div>
+        <div class="multi-select-option" data-value="Harm &amp; Safety"><div class="check"></div>Harm &amp; Safety</div>
+        <div class="multi-select-option" data-value="Transparency &amp; Disclosure"><div class="check"></div>Transparency &amp; Disclosure</div>
+        <div class="multi-select-option" data-value="Intellectual Property &amp; Copyright"><div class="check"></div>IP &amp; Copyright</div>
+        <div class="multi-select-option" data-value="Bias, Fairness &amp; Representation"><div class="check"></div>Bias &amp; Fairness</div>
+        <div class="multi-select-option" data-value="Integrity &amp; Trustworthiness (Factualness)"><div class="check"></div>Integrity</div>
+        <div class="multi-select-option" data-value="Accountability Structures"><div class="check"></div>Accountability</div>
+        <div class="multi-select-option" data-value="Formal Policy Embedding"><div class="check"></div>Formal Policy</div>
+        <div class="multi-select-option" data-value="Governance &amp; Monitoring Mechanisms"><div class="check"></div>Governance Mechanisms</div>
+        <div class="multi-select-option" data-value="Static Visuals (Images/Photos)"><div class="check"></div>Static Visuals</div>
+        <div class="multi-select-option" data-value="Moving Images (Video/Film)"><div class="check"></div>Moving Images</div>
+        <div class="multi-select-option" data-value="(Info)graphics &amp; Illustrations"><div class="check"></div>(Info)graphics</div>
+        <div class="multi-select-option" data-value="Constraint / Prohibitive Framing"><div class="check"></div>Constraint Framing</div>
+        <div class="multi-select-option" data-value="Legitimation / Supportive Framing"><div class="check"></div>Legitimation Framing</div>
+        <div class="multi-select-option" data-value="Dynamicity of guidelines regarding visuals"><div class="check"></div>Dynamicity</div>
+        <div class="multi-select-option" data-value="No replacement of humans"><div class="check"></div>No replacement of humans</div>
+        <div class="multi-select-option" data-value="Train employees"><div class="check"></div>Train employees</div>
+        <div class="multi-select-option" data-value="NEW: Same rules for external partners who provide services"><div class="check"></div>Same rules for partners</div>
       </div>
     </div>
   </div>
 
   <div class="filter-section">
-    <div class="filter-label" id="lbl-cont">Continent</div>
-    <div class="filter-chips" id="continent-filters" role="group" aria-labelledby="lbl-cont">
-      <button class="chip active" data-value="all" aria-pressed="true">All</button>
-      <button class="chip" data-value="Europe" aria-pressed="false">Europe</button>
-      <button class="chip" data-value="North America" aria-pressed="false">N. America</button>
-      <button class="chip" data-value="South America" aria-pressed="false">S. America</button>
-      <button class="chip" data-value="Asia" aria-pressed="false">Asia</button>
-      <button class="chip" data-value="Oceania" aria-pressed="false">Oceania</button>
+    <div class="filter-label">Continent</div>
+    <div class="filter-chips" id="continent-filters">
+      <button class="chip active" data-value="all">All</button>
+      <button class="chip" data-value="Europe">Europe</button>
+      <button class="chip" data-value="North America">N. America</button>
+      <button class="chip" data-value="South America">S. America</button>
+      <button class="chip" data-value="Asia">Asia</button>
+      <button class="chip" data-value="Oceania">Oceania</button>
     </div>
   </div>
 
   <button id="reset-btn">↺ Reset Filters</button>
 </nav>
 
-<div id="stats" role="status" aria-live="polite">
+<!-- STATS -->
+<div id="stats">
   <div class="stat-item">
     <strong id="stat-orgs">—</strong><span>&nbsp;Organisations</span>
-    <div class="stat-info-icon" id="org-info-btn" role="button" tabindex="0" aria-label="List of organisations">i</div>
-    <div class="stat-tooltip" id="org-tooltip" role="tooltip"><h5>Organisations</h5><div id="org-tooltip-list"></div></div>
+    <div class="stat-info-icon" id="org-info-btn">i</div>
+    <div class="stat-tooltip" id="org-tooltip"><h5>Organisations</h5><div id="org-tooltip-list"></div></div>
   </div>
   <span style="color:var(--border-strong)">·</span>
   <div class="stat-item">
     <strong id="stat-countries">—</strong><span>&nbsp;Countries</span>
-    <div class="stat-info-icon" id="country-info-btn" role="button" tabindex="0" aria-label="List of countries">i</div>
-    <div class="stat-tooltip" id="country-tooltip" role="tooltip"><h5>Countries</h5><div id="country-tooltip-list"></div></div>
+    <div class="stat-info-icon" id="country-info-btn">i</div>
+    <div class="stat-tooltip" id="country-tooltip"><h5>Countries</h5><div id="country-tooltip-list"></div></div>
   </div>
 </div>
 
-<div id="legend" aria-label="Map legend">
+<!-- LEGEND -->
+<div id="legend">
   <h4>Continent</h4>
   <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Europe</div>
   <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>N. America</div>
@@ -456,34 +437,60 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   <div class="legend-item"><div class="legend-dot" style="background:#0891b2"></div>Oceania</div>
 </div>
 
-<div id="popup" role="dialog" aria-modal="true" aria-labelledby="popup-org">
+<!-- DETAIL POPUP -->
+<div id="popup">
   <div class="popup-header">
     <div>
       <div class="popup-org" id="popup-org"></div>
       <div class="popup-meta" id="popup-meta"></div>
     </div>
-    <button class="popup-close" id="popup-close" aria-label="Close">✕</button>
+    <button class="popup-close" id="popup-close">✕</button>
   </div>
   <div class="popup-body" id="popup-body"></div>
-</div>
-
-<div id="imprint">
-  © 2025 &nbsp;·&nbsp; Map Design &amp; Development: Mirco Nussbaum &nbsp;·&nbsp; Content: Dr. Seraina Tarnutzer-Zigerli, Mathias-Felipe de Lima-Santos &amp; Mirco Nussbaum
 </div>
 
 <script>
 'use strict';
 
-/* ============================================================
-   GLOBAL STORES & FILTER STATE
-   ============================================================ */
-const ORGS_BY_COUNTRY = new Map();
+const CONFIG = {
+  accessToken: 'pk.eyJ1IjoibWlzbnVzIiwiYSI6ImNtbzh3NnVoODAzaXgycXM4ZDM1a3N3cjYifQ.Dn3yDZU4xGeGenDSVcEZ4Q',
+  styleUrl:    'mapbox://styles/misnus/cmolikd7u002k01r0312u0m81',
+  center:      [-40, 30],
+  zoom:        1.8,
+  minZoom:     1.2,
+  maxZoom:     10,
+  continentColors: {
+    'Europe':        '#2563eb',
+    'North America': '#d97706',
+    'South America': '#059669',
+    'Asia':          '#dc2626',
+    'Oceania':       '#0891b2',
+  },
+  defaultColor: '#7c3aed',
+};
 
-let activeTypes      = [];
-let activeSubtypes   = [];
-let activeCategories = [];
-let activeCodes      = [];
-let activeContinents = [];
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+mapboxgl.accessToken = CONFIG.accessToken;
+const map = new mapboxgl.Map({
+  container: 'map', style: CONFIG.styleUrl,
+  center: CONFIG.center, zoom: CONFIG.zoom,
+  minZoom: CONFIG.minZoom, maxZoom: CONFIG.maxZoom,
+  projection: 'globe', attributionControl: false,
+});
+map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
+
+const ORGS_BY_COUNTRY = new Map();
+COUNTRY_DATA.features.forEach(f => {
+  ORGS_BY_COUNTRY.set(f.properties.country, f.properties.orgs);
+});
+
+let activeTypes = [], activeSubtypes = [], activeCategories = [], activeCodes = [], activeContinents = [];
 
 function getColor(continent) { return CONFIG.continentColors[continent] ?? CONFIG.defaultColor; }
 function matchAll(arr, val)  { return arr.length === 0 || arr.includes(val); }
@@ -491,23 +498,14 @@ function matchAny(arr, list) { return arr.length === 0 || list.some(v => arr.inc
 
 let orgListPopup = null;
 function closeOrgListPopup() { if (orgListPopup) { orgListPopup.remove(); orgListPopup = null; } }
-
 function closeAllMultiSelects() {
-  document.querySelectorAll('.multi-select-dropdown.open').forEach(d => {
-    d.classList.remove('open');
-    d.previousElementSibling?.setAttribute('aria-expanded', 'false');
-  });
+  document.querySelectorAll('.multi-select-dropdown.open').forEach(d => d.classList.remove('open'));
 }
 
-/* ============================================================
-   FILTER LOGIC
-   ============================================================ */
 function getFilteredData() {
   const features = [];
   COUNTRY_DATA.features.forEach(f => {
-    const continent = f.properties.continent;
-    if (!matchAll(activeContinents, continent)) return;
-    
+    if (!matchAll(activeContinents, f.properties.continent)) return;
     const allOrgs = ORGS_BY_COUNTRY.get(f.properties.country) ?? [];
     const filtered = allOrgs.filter(org =>
       matchAll(activeTypes, org.type) &&
@@ -515,24 +513,12 @@ function getFilteredData() {
       matchAny(activeCategories, org.categories) &&
       matchAny(activeCodes, org.codes)
     );
-    
     if (!filtered.length) return;
-    
-    features.push({
-      ...f,
-      properties: {
-        ...f.properties,
-        org_count:  filtered.length,
-        orgs:       filtered 
-      },
-    });
+    features.push({ ...f, properties: { ...f.properties, org_count: filtered.length, orgs: filtered } });
   });
   return { type: 'FeatureCollection', features };
 }
 
-/* ============================================================
-   STATS UPDATE
-   ============================================================ */
 function updateStats(data) {
   const orgs = [], countries = [];
   data.features.forEach(f => {
@@ -552,85 +538,42 @@ function applyFilters() {
   document.getElementById('popup').classList.remove('visible');
   closeOrgListPopup(); closeAllMultiSelects();
   const filtered = getFilteredData();
-  if (map.getSource('countries')) {
-    map.getSource('countries').setData(filtered);
-  }
+  if (map.getSource('countries')) map.getSource('countries').setData(filtered);
   updateStats(filtered);
 }
 
-/* ============================================================
-   MAP LOAD & INIT
-   ============================================================ */
 map.on('load', () => {
-  COUNTRY_DATA.features.forEach(f => {
-    ORGS_BY_COUNTRY.set(f.properties.country, f.properties.orgs);
-  });
-
-  const initialData = getFilteredData();
-
-  map.addSource('countries', {
-    type:      'geojson',
-    data:      initialData,
-    generateId: true,
-  });
-
+  const initial = getFilteredData();
+  map.addSource('countries', { type: 'geojson', data: initial, generateId: true });
   map.addLayer({
-    id:     'country-glow',
-    type:   'circle',
-    source: 'countries',
+    id: 'country-glow', type: 'circle', source: 'countries',
     paint: {
-      'circle-radius':  ['interpolate', ['linear'], ['get', 'org_count'], 1, 20, 5, 28, 20, 38],
-      'circle-color':   ['match', ['get', 'continent'],
-        'Europe',        '#2563eb', 'North America', '#d97706',
-        'South America', '#059669', 'Asia',          '#dc2626',
-        'Oceania',       '#0891b2', '#7c3aed'],
-      'circle-opacity': 0.12,
-      'circle-blur':    1.2,
+      'circle-radius': ['interpolate', ['linear'], ['get', 'org_count'], 1, 20, 5, 28, 20, 38],
+      'circle-color':  ['match', ['get', 'continent'],
+        'Europe','#2563eb','North America','#d97706','South America','#059669','Asia','#dc2626','Oceania','#0891b2','#7c3aed'],
+      'circle-opacity': 0.12, 'circle-blur': 1.2,
     },
   });
-
   map.addLayer({
-    id:     'country-circles',
-    type:   'circle',
-    source: 'countries',
+    id: 'country-circles', type: 'circle', source: 'countries',
     paint: {
       'circle-radius': ['interpolate', ['linear'], ['get', 'org_count'], 1, 11, 5, 15, 20, 21],
       'circle-color':  ['match', ['get', 'continent'],
-        'Europe',        '#2563eb', 'North America', '#d97706',
-        'South America', '#059669', 'Asia',          '#dc2626',
-        'Oceania',       '#0891b2', '#7c3aed'],
-      'circle-opacity':       0.92,
-      'circle-stroke-width':  2,
-      'circle-stroke-color':  'rgba(255,255,255,0.85)',
+        'Europe','#2563eb','North America','#d97706','South America','#059669','Asia','#dc2626','Oceania','#0891b2','#7c3aed'],
+      'circle-opacity': 0.92, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.85)',
     },
   });
-
   map.addLayer({
-    id:     'country-labels',
-    type:   'symbol',
-    source: 'countries',
-    layout: {
-      'text-field':    ['to-string', ['get', 'org_count']],
-      'text-size':     11,
-      'text-font':     ['DIN Pro Bold', 'Arial Unicode MS Regular'],
-      'text-allow-overlap': true,
-    },
-    paint: {
-      'text-color':      '#ffffff',
-      'text-halo-color': 'rgba(0,0,0,0.15)',
-      'text-halo-width': 0.5,
-    },
+    id: 'country-labels', type: 'symbol', source: 'countries',
+    layout: { 'text-field': ['to-string', ['get', 'org_count']], 'text-size': 11,
+              'text-font': ['DIN Pro Bold', 'Arial Unicode MS Regular'], 'text-allow-overlap': true },
+    paint: { 'text-color': '#ffffff', 'text-halo-color': 'rgba(0,0,0,0.15)', 'text-halo-width': 0.5 },
   });
-
-  updateStats(initialData);
-
+  updateStats(initial);
   map.on('mouseenter', 'country-circles', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'country-circles', () => { map.getCanvas().style.cursor = ''; });
 });
 
-/* ============================================================
-   MAP INTERACTION & POPUPS
-   ============================================================ */
 map.on('click', 'country-circles', e => {
   e.preventDefault();
   const feature = e.features[0];
@@ -641,16 +584,12 @@ map.on('click', 'country-circles', e => {
     matchAll(activeTypes, org.type) && matchAll(activeSubtypes, org.subtype) &&
     matchAny(activeCategories, org.categories) && matchAny(activeCodes, org.codes)
   );
-
   closeOrgListPopup();
-
   const listHTML = [...orgs].sort((a, b) => a.organization.localeCompare(b.organization))
     .map(org => `<div class="org-list-item" data-org="${esc(org.organization)}" data-country="${esc(org.country)}">
       <div class="org-list-dot" style="background:${color}"></div>${esc(org.organization)}</div>`).join('');
-
   orgListPopup = new mapboxgl.Popup({ closeButton: false, offset: 15 })
     .setLngLat(e.lngLat).setHTML(listHTML).addTo(map);
-
   orgListPopup.getElement().addEventListener('click', ev => {
     const item = ev.target.closest('.org-list-item');
     if (!item) return;
@@ -666,9 +605,6 @@ map.on('click', e => {
   }
 });
 
-/* ============================================================
-   DETAIL INFOBOX OUT
-   ============================================================ */
 function openPopup(org) {
   const segments = org.segments ?? [];
   document.getElementById('popup-org').textContent  = org.organization;
@@ -682,7 +618,6 @@ function openPopup(org) {
     const hi = activeCodes.length > 0 && activeCodes.includes(c);
     return `<span class="code-badge${hi?' highlight':''}">${esc(c)}</span>`;
   }).join('');
-
   function buildSegsHTML(segs) {
     if (!segs.length) return '<div style="font-size:12px;color:var(--text-muted);font-style:italic;">No segments for this filter.</div>';
     const byCat = {};
@@ -696,124 +631,104 @@ function openPopup(org) {
       ).join('')
     ).join('');
   }
-
   const linksHTML = (org.links ?? []).map((lnk, i) => {
-    const href  = lnk.startsWith('http') ? lnk : `https://${lnk}`;
-    const label = (org.links.length > 1) ? `Link ${i + 1}` : 'Link';
-    return `<div class="info-row">
-      <div class="info-label">${label}</div>
-      <div class="info-value info-link"><a href="${esc(href)}" target="_blank" rel="noopener noreferrer">View Guidelines →</a></div>
-    </div>`;
+    const href = lnk.startsWith('http') ? lnk : `https://${lnk}`;
+    const label = org.links.length > 1 ? `Link ${i+1}` : 'Link';
+    return `<div class="info-row"><div class="info-label">${label}</div><div class="info-value info-link"><a href="${esc(href)}" target="_blank" rel="noopener noreferrer">View Guidelines →</a></div></div>`;
   }).join('');
-
   document.getElementById('popup-body').innerHTML = `
-    <div class="info-row">
-      <div class="info-label">Type</div>
-      <div class="info-value">${esc(org.type)}${org.subtype && org.subtype !== org.type ? ` <span style="color:var(--text-muted)">(${esc(org.subtype)})</span>` : ''}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">Last Updated</div>
-      <div class="info-value">${esc(org.last_updated || 'n/a')}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">Segments</div>
-      <div class="info-value">${segments.length} total</div>
-    </div>
+    <div class="info-row"><div class="info-label">Type</div><div class="info-value">${esc(org.type)}${org.subtype&&org.subtype!==org.type?` <span style="color:var(--text-muted)">(${esc(org.subtype)})</span>`:''}</div></div>
+    <div class="info-row"><div class="info-label">Last Updated</div><div class="info-value">${esc(org.last_updated||'n/a')}</div></div>
+    <div class="info-row"><div class="info-label">Segments</div><div class="info-value">${segments.length} total</div></div>
     ${linksHTML}
-    <hr class="grid-divider">
-    <div class="codes-section"><h5>Codes</h5>${codesHTML || '<span style="font-size:11px;color:var(--text-muted)">—</span>'}</div>
-    <div class="segments-section"><h5>Segments</h5>${buildSegsHTML(filteredSegs)}</div>
-  `;
-
+    <hr class="divider">
+    <div class="codes-section"><h5>Codes</h5>${codesHTML||'<span style="font-size:11px;color:var(--text-muted)">—</span>'}</div>
+    <div class="segments-section"><h5>Segments</h5>${buildSegsHTML(filteredSegs)}</div>`;
   const popup = document.getElementById('popup');
-  popup.style.left = '278px'; popup.style.top  = '16px';
+  popup.style.left = '278px'; popup.style.top = '16px';
   popup.classList.add('visible');
 }
 
-document.getElementById('popup-close').addEventListener('click', () => {
-  document.getElementById('popup').classList.remove('visible');
-});
+document.getElementById('popup-close').addEventListener('click', () => document.getElementById('popup').classList.remove('visible'));
+document.getElementById('info-btn').addEventListener('click', e => { e.stopPropagation(); document.getElementById('info-modal').classList.toggle('visible'); });
+document.getElementById('info-modal-close').addEventListener('click', () => document.getElementById('info-modal').classList.remove('visible'));
+document.getElementById('org-info-btn').addEventListener('click', e => { e.stopPropagation(); document.getElementById('country-tooltip').classList.remove('open'); document.getElementById('org-tooltip').classList.toggle('open'); });
+document.getElementById('country-info-btn').addEventListener('click', e => { e.stopPropagation(); document.getElementById('org-tooltip').classList.remove('open'); document.getElementById('country-tooltip').classList.toggle('open'); });
 
-/* ============================================================
-   UI OVERLAYS & MODALS
-   ============================================================ */
-document.getElementById('info-btn').addEventListener('click', e => {
-  e.stopPropagation(); document.getElementById('info-modal').classList.toggle('visible');
-});
-document.getElementById('info-modal-close').addEventListener('click', () => {
-  document.getElementById('info-modal').classList.remove('visible');
-});
+const CONTINENT_VIEWS = {
+  'all':           { center: [-40, 30],  zoom: 1.8 },
+  'Europe':        { center: [15,  54],  zoom: 3.5 },
+  'North America': { center: [-95, 45],  zoom: 3.0 },
+  'South America': { center: [-60, -15], zoom: 3.0 },
+  'Asia':          { center: [95,  35],  zoom: 3.0 },
+  'Oceania':       { center: [140, -25], zoom: 3.5 },
+};
 
-document.getElementById('org-info-btn').addEventListener('click', e => {
-  e.stopPropagation(); document.getElementById('country-tooltip').classList.remove('open'); document.getElementById('org-tooltip').classList.toggle('open');
-});
-document.getElementById('country-info-btn').addEventListener('click', e => {
-  e.stopPropagation(); document.getElementById('org-tooltip').classList.remove('open'); document.getElementById('country-tooltip').classList.toggle('open');
-});
-
-/* ============================================================
-   MOBILE OVERLAY INTERACTION
-   ============================================================ */
-const filterPanel = document.getElementById('filters');
-document.getElementById('mobile-filter-trigger').addEventListener('click', e => {
-  e.stopPropagation();
-  filterPanel.classList.add('open');
-});
-document.getElementById('mobile-filter-close').addEventListener('click', () => {
-  filterPanel.classList.remove('open');
-});
-
-/* ============================================================
-   COMPONENTS WIRE-UP (Multi-Select & Chips)
-   ============================================================ */
 function setupMultiSelect(dropdownId, btnId, labelId, allLabel, onChange) {
-  const dropdown = document.getElementById(dropdownId), btn = document.getElementById(btnId), label = document.getElementById(labelId);
+  const dropdown = document.getElementById(dropdownId);
+  const btn = document.getElementById(btnId);
+  const label = document.getElementById(labelId);
   let selected = [];
   dropdown.addEventListener('click', e => {
-    e.stopPropagation(); const opt = e.target.closest('.multi-select-option'); if (!opt) return; const val = opt.dataset.value;
+    e.stopPropagation();
+    const opt = e.target.closest('.multi-select-option');
+    if (!opt) return;
+    const val = opt.dataset.value;
     if (val === 'all') {
-      selected = []; dropdown.querySelectorAll('.multi-select-option').forEach(o => { const isAll = o.dataset.value === 'all'; o.classList.toggle('selected', isAll); o.querySelector('.check').textContent = isAll ? '✓' : ''; o.setAttribute('aria-selected', isAll ? 'true' : 'false'); });
+      selected = [];
+      dropdown.querySelectorAll('.multi-select-option').forEach(o => {
+        const isAll = o.dataset.value === 'all';
+        o.classList.toggle('selected', isAll);
+        o.querySelector('.check').textContent = isAll ? '✓' : '';
+      });
     } else {
-      dropdown.querySelector('[data-value="all"]').classList.remove('selected'); dropdown.querySelector('[data-value="all"]').querySelector('.check').textContent = ''; dropdown.querySelector('[data-value="all"]').setAttribute('aria-selected', 'false');
-      const idx = selected.indexOf(val); if (idx > -1) { selected.splice(idx, 1); opt.classList.remove('selected'); opt.querySelector('.check').textContent = ''; opt.setAttribute('aria-selected','false'); } else { selected.push(val); opt.classList.add('selected'); opt.querySelector('.check').textContent = '✓'; opt.setAttribute('aria-selected','true'); }
-      if (selected.length === 0) { dropdown.querySelector('[data-value="all"]').classList.add('selected'); dropdown.querySelector('[data-value="all"]').querySelector('.check').textContent = '✓'; dropdown.querySelector('[data-value="all"]').setAttribute('aria-selected','true'); }
+      dropdown.querySelector('[data-value="all"]').classList.remove('selected');
+      dropdown.querySelector('[data-value="all"]').querySelector('.check').textContent = '';
+      const idx = selected.indexOf(val);
+      if (idx > -1) { selected.splice(idx, 1); opt.classList.remove('selected'); opt.querySelector('.check').textContent = ''; }
+      else          { selected.push(val); opt.classList.add('selected'); opt.querySelector('.check').textContent = '✓'; }
+      if (!selected.length) { dropdown.querySelector('[data-value="all"]').classList.add('selected'); dropdown.querySelector('[data-value="all"]').querySelector('.check').textContent = '✓'; }
     }
-    label.textContent = selected.length === 0 ? allLabel : `${selected.length} selected`; onChange(selected);
+    label.textContent = selected.length ? `${selected.length} selected` : allLabel;
+    onChange(selected);
   });
-  btn.addEventListener('click', e => { e.stopPropagation(); closeAllMultiSelects(); const isOpen = dropdown.classList.toggle('open'); btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false'); });
-  return { reset() { selected = []; dropdown.querySelectorAll('.multi-select-option').forEach(o => { const isAll = o.dataset.value === 'all'; o.classList.toggle('selected', isAll); o.querySelector('.check').textContent = isAll ? '✓' : ''; o.setAttribute('aria-selected', isAll ? 'true' : 'false'); }); label.textContent = allLabel; } };
+  btn.addEventListener('click', e => { e.stopPropagation(); closeAllMultiSelects(); dropdown.classList.toggle('open'); });
+  return { reset() { selected = []; dropdown.querySelectorAll('.multi-select-option').forEach(o => { const isAll = o.dataset.value==='all'; o.classList.toggle('selected',isAll); o.querySelector('.check').textContent = isAll?'✓':''; }); label.textContent = allLabel; } };
 }
 
 function setupChipFilter(containerId, onChange) {
-  const container = document.getElementById(containerId); let selected = [];
+  const container = document.getElementById(containerId);
+  let selected = [];
   container.addEventListener('click', e => {
-    const chip = e.target.closest('.chip'); if (!chip) return; const val = chip.dataset.value;
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    const val = chip.dataset.value;
     if (val === 'all') {
-      selected = []; container.querySelectorAll('.chip').forEach(c => { const isAll = c.dataset.value === 'all'; c.classList.toggle('active', isAll); c.setAttribute('aria-pressed', isAll ? 'true' : 'false'); });
+      selected = [];
+      container.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value==='all'));
     } else {
-      container.querySelector('[data-value="all"]').classList.remove('active'); container.querySelector('[data-value="all"]').setAttribute('aria-pressed', 'false'); chip.classList.toggle('active');
-      const pressed = chip.classList.contains('active'); chip.setAttribute('aria-pressed', pressed ? 'true' : 'false'); if (pressed) selected.push(val); else selected = selected.filter(v => v !== val);
-      if (selected.length === 0) { container.querySelector('[data-value="all"]').classList.add('active'); container.querySelector('[data-value="all"]').setAttribute('aria-pressed', 'true'); }
+      container.querySelector('[data-value="all"]').classList.remove('active');
+      chip.classList.toggle('active');
+      if (chip.classList.contains('active')) selected.push(val);
+      else selected = selected.filter(v => v !== val);
+      if (!selected.length) container.querySelector('[data-value="all"]').classList.add('active');
     }
     onChange(selected);
   });
-  return { reset() { selected = []; container.querySelectorAll('.chip').forEach(c => { const isAll = c.dataset.value === 'all'; c.classList.toggle('active', isAll); c.setAttribute('aria-pressed', isAll ? 'true' : 'false'); }); } };
+  return { reset() { selected = []; container.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value==='all')); } };
 }
 
-const typeFilter     = setupChipFilter('type-filters', vals => { activeTypes = vals; applyFilters(); });
+const typeFilter     = setupChipFilter('type-filters',     vals => { activeTypes = vals; applyFilters(); });
 const categoryFilter = setupChipFilter('category-filters', vals => { activeCategories = vals; applyFilters(); });
 const continentFilter = setupChipFilter('continent-filters', vals => {
   activeContinents = vals;
-  if (vals.length === 1) { const v = CONTINENT_VIEWS[vals[0]] ?? CONTINENT_VIEWS['all']; map.flyTo({ center: v.center, zoom: v.zoom, duration: 1200 }); }
+  if (vals.length === 1) { const v = CONTINENT_VIEWS[vals[0]]||CONTINENT_VIEWS['all']; map.flyTo({ center: v.center, zoom: v.zoom, duration: 1200 }); }
   else if (!vals.length) map.flyTo({ center: CONFIG.center, zoom: CONFIG.zoom, duration: 1200 });
   applyFilters();
 });
-const subtypeFilter = setupMultiSelect('subtype-dropdown', 'subtype-btn', 'subtype-label', 'All Subtypes', vals => { activeSubtypes = vals; applyFilters(); });
+const subtypeFilter = setupMultiSelect('subtype-dropdown','subtype-btn','subtype-label','All Subtypes', vals => { activeSubtypes = vals; applyFilters(); });
 const codeFilter    = setupMultiSelect('code-dropdown',   'code-btn',   'code-label',   'All Codes',    vals => { activeCodes = vals; applyFilters(); });
 
-/* ============================================================
-   RESET & DOCUMENT OVERLAYS
-   ============================================================ */
 document.getElementById('reset-btn').addEventListener('click', () => {
   activeTypes=[]; activeSubtypes=[]; activeCategories=[]; activeCodes=[]; activeContinents=[];
   typeFilter.reset(); subtypeFilter.reset(); categoryFilter.reset(); codeFilter.reset(); continentFilter.reset();
@@ -823,17 +738,14 @@ document.getElementById('reset-btn').addEventListener('click', () => {
 
 document.addEventListener('click', () => {
   closeAllMultiSelects();
-  filterPanel.classList.remove('open');
   document.getElementById('org-tooltip').classList.remove('open');
   document.getElementById('country-tooltip').classList.remove('open');
   document.getElementById('info-modal').classList.remove('visible');
 });
-
 document.getElementById('filters').addEventListener('click', e => e.stopPropagation());
-document.getElementById('popup').addEventListener('click',   e => e.stopPropagation());
+document.getElementById('popup').addEventListener('click', e => e.stopPropagation());
 document.getElementById('info-modal').addEventListener('click', e => e.stopPropagation());
-document.getElementById('stats').addEventListener('click',   e => e.stopPropagation());
-
+document.getElementById('stats').addEventListener('click', e => e.stopPropagation());
 </script>
 </body>
 </html>
