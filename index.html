@@ -31,7 +31,7 @@
 body { font-family:var(--font); font-size:14px; color:var(--text); background:#e8edf2; }
 #map { position:absolute; inset:0; }
 
-/* ── MOBILE BANNER (soft, not a wall) ── */
+/* MOBILE BANNER */
 #mobile-banner {
   display:none;
   position:fixed; top:0; left:0; right:0; z-index:99999;
@@ -46,7 +46,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 }
 @media (max-width:768px) { #mobile-banner { display:flex; } }
 
-/* ── MOBILE FILTER TOGGLE ── */
+/* MOBILE FILTER TOGGLE */
 #filter-toggle {
   display:none;
   position:absolute; top:16px; left:16px; z-index:20;
@@ -61,7 +61,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   #filters.mobile-open { display:block; }
 }
 
-/* ── HEADER ── */
+/* HEADER */
 #header {
   position:absolute; top:16px; left:50%; transform:translateX(-50%);
   z-index:10; background:var(--surface); border:1px solid var(--border);
@@ -71,10 +71,10 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 #header h1 { font-size:15px; font-weight:700; }
 #header p  { font-size:12px; color:var(--text-sec); margin-top:2px; }
 @media (max-width:768px) {
-  #header { left:50%; transform:translateX(-50%); top:56px; white-space:normal; max-width:calc(100vw - 32px); }
+  #header { top:56px; white-space:normal; max-width:calc(100vw - 32px); }
 }
 
-/* ── FILTER PANEL ── */
+/* FILTER PANEL */
 #filters {
   position:absolute; top:16px; left:16px; z-index:10;
   background:var(--surface); border:1px solid var(--border);
@@ -134,7 +134,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 }
 #reset-btn:hover { background:var(--primary-light); border-color:var(--primary); color:var(--primary); }
 
-/* ── STATS ── */
+/* STATS */
 #stats {
   position:absolute; bottom:30px; left:16px; z-index:10;
   background:var(--surface); border:1px solid var(--border);
@@ -169,7 +169,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 }
 .stat-tooltip-item:last-child { border-bottom:none; }
 
-/* ── LEGEND ── */
+/* LEGEND */
 #legend {
   position:absolute; bottom:30px; right:50px; z-index:10;
   background:var(--surface); border:1px solid var(--border);
@@ -189,7 +189,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   border:1.5px solid rgba(255,255,255,.8); box-shadow:0 1px 3px rgba(0,0,0,.2);
 }
 
-/* ── INFO BUTTON + MODAL ── */
+/* INFO BUTTON + MODAL */
 #info-btn {
   position:absolute; top:16px; right:16px; z-index:10;
   width:34px; height:34px; border-radius:50%;
@@ -213,7 +213,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   font-size:16px; color:var(--text-muted); cursor:pointer;
 }
 
-/* ── ORG LIST POPUP ── */
+/* ORG LIST POPUP */
 .mapboxgl-popup-content {
   padding:0 !important; border-radius:8px !important;
   box-shadow:0 4px 18px rgba(0,0,0,.14) !important;
@@ -231,7 +231,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 .org-list-item:hover { background:#eff6ff; color:#1d4ed8; }
 .org-list-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
-/* ── DETAIL POPUP ── */
+/* DETAIL POPUP */
 #popup {
   position:absolute; z-index:100; background:var(--surface);
   border:1px solid var(--border); border-radius:var(--radius);
@@ -284,6 +284,17 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   border-top-left-radius:0; border-bottom-left-radius:0;
 }
 .seg-code { font-size:10px; font-weight:600; color:var(--primary); margin-bottom:3px; }
+
+/* IMPRINT */
+#imprint {
+  position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+  z-index:10; font-size:11px; color:var(--text-muted);
+  background:rgba(255,255,255,0.85); padding:4px 14px;
+  border-radius:20px; white-space:nowrap; pointer-events:auto;
+}
+#imprint a { color:var(--text-muted); text-decoration:none; }
+#imprint a:hover { color:var(--primary); }
+@media (max-width:768px) { #imprint { display:none; } }
 </style>
 </head>
 <body>
@@ -435,6 +446,11 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>S. America</div>
   <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>Asia</div>
   <div class="legend-item"><div class="legend-dot" style="background:#0891b2"></div>Oceania</div>
+</div>
+
+<!-- IMPRINT -->
+<div id="imprint">
+  © 2026 &nbsp;·&nbsp; Map Design &amp; Development: Mirco Nussbaum &nbsp;·&nbsp; Content: Dr. Seraina Tarnutzer-Zigerli, Mathias-Felipe de Lima-Santos &amp; Mirco Nussbaum
 </div>
 
 <!-- DETAIL POPUP -->
@@ -718,16 +734,16 @@ function setupChipFilter(containerId, onChange) {
   return { reset() { selected = []; container.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value==='all')); } };
 }
 
-const typeFilter     = setupChipFilter('type-filters',     vals => { activeTypes = vals; applyFilters(); });
-const categoryFilter = setupChipFilter('category-filters', vals => { activeCategories = vals; applyFilters(); });
+const typeFilter      = setupChipFilter('type-filters',      vals => { activeTypes = vals; applyFilters(); });
+const categoryFilter  = setupChipFilter('category-filters',  vals => { activeCategories = vals; applyFilters(); });
 const continentFilter = setupChipFilter('continent-filters', vals => {
   activeContinents = vals;
-  if (vals.length === 1) { const v = CONTINENT_VIEWS[vals[0]]||CONTINENT_VIEWS['all']; map.flyTo({ center: v.center, zoom: v.zoom, duration: 1200 }); }
+  if (vals.length === 1) { const v = CONTINENT_VIEWS[vals[0]] || CONTINENT_VIEWS['all']; map.flyTo({ center: v.center, zoom: v.zoom, duration: 1200 }); }
   else if (!vals.length) map.flyTo({ center: CONFIG.center, zoom: CONFIG.zoom, duration: 1200 });
   applyFilters();
 });
-const subtypeFilter = setupMultiSelect('subtype-dropdown','subtype-btn','subtype-label','All Subtypes', vals => { activeSubtypes = vals; applyFilters(); });
-const codeFilter    = setupMultiSelect('code-dropdown',   'code-btn',   'code-label',   'All Codes',    vals => { activeCodes = vals; applyFilters(); });
+const subtypeFilter = setupMultiSelect('subtype-dropdown', 'subtype-btn', 'subtype-label', 'All Subtypes', vals => { activeSubtypes = vals; applyFilters(); });
+const codeFilter    = setupMultiSelect('code-dropdown',    'code-btn',    'code-label',    'All Codes',    vals => { activeCodes = vals; applyFilters(); });
 
 document.getElementById('reset-btn').addEventListener('click', () => {
   activeTypes=[]; activeSubtypes=[]; activeCategories=[]; activeCodes=[]; activeContinents=[];
@@ -742,10 +758,10 @@ document.addEventListener('click', () => {
   document.getElementById('country-tooltip').classList.remove('open');
   document.getElementById('info-modal').classList.remove('visible');
 });
-document.getElementById('filters').addEventListener('click', e => e.stopPropagation());
-document.getElementById('popup').addEventListener('click', e => e.stopPropagation());
+document.getElementById('filters').addEventListener('click',    e => e.stopPropagation());
+document.getElementById('popup').addEventListener('click',      e => e.stopPropagation());
 document.getElementById('info-modal').addEventListener('click', e => e.stopPropagation());
-document.getElementById('stats').addEventListener('click', e => e.stopPropagation());
+document.getElementById('stats').addEventListener('click',      e => e.stopPropagation());
 </script>
 </body>
 </html>
