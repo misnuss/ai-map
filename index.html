@@ -111,7 +111,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 }
 #reset-btn:hover { background:var(--primary-light); border-color:var(--primary); color:var(--primary); }
 
-/* Mobile Filter UI elements */
+/* Mobile Elemente */
 #mobile-filter-close { display: none; background: none; border: none; font-size: 16px; color: var(--text-muted); cursor: pointer; }
 #mobile-filter-trigger {
   display: none; position: absolute; bottom: 24px; right: 16px; z-index: 99;
@@ -288,7 +288,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 #imprint {
   position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
   z-index: 10; font-size: 11px; color: var(--text-sec); text-align: center;
-  background: rgba(255, 255, 255, 0.75); padding: 5px 14px;
+  background: rgba(255, 255, 255, 0.85); padding: 5px 14px;
   border-radius: 20px; border: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: var(--shadow); white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
 }
@@ -312,7 +312,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   
   #stats { bottom: auto; top: 110px; left: 16px; box-shadow: var(--shadow); }
   #legend { display: none; }
-  #imprint { display: none; } /* Mobil ausblenden für mehr Platz */
+  #imprint { display: none; }
   #popup { width: calc(100% - 32px); left: 16px !important; bottom: 16px; top: auto !important; max-height: 50vh; }
 }
 </style>
@@ -454,6 +454,17 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>S. America</div>
   <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>Asia</div>
   <div class="legend-item"><div class="legend-dot" style="background:#0891b2"></div>Oceania</div>
+</div>
+
+<div id="popup" role="dialog" aria-modal="true" aria-labelledby="popup-org">
+  <div class="popup-header">
+    <div>
+      <div class="popup-org" id="popup-org"></div>
+      <div class="popup-meta" id="popup-meta"></div>
+    </div>
+    <button class="popup-close" id="popup-close" aria-label="Close">✕</button>
+  </div>
+  <div class="popup-body" id="popup-body"></div>
 </div>
 
 <div id="imprint">
@@ -799,6 +810,29 @@ const continentFilter = setupChipFilter('continent-filters', vals => {
 });
 const subtypeFilter = setupMultiSelect('subtype-dropdown', 'subtype-btn', 'subtype-label', 'All Subtypes', vals => { activeSubtypes = vals; applyFilters(); });
 const codeFilter    = setupMultiSelect('code-dropdown',   'code-btn',   'code-label',   'All Codes',    vals => { activeCodes = vals; applyFilters(); });
+
+/* ============================================================
+   RESET & DOCUMENT OVERLAYS
+   ============================================================ */
+document.getElementById('reset-btn').addEventListener('click', () => {
+  activeTypes=[]; activeSubtypes=[]; activeCategories=[]; activeCodes=[]; activeContinents=[];
+  typeFilter.reset(); subtypeFilter.reset(); categoryFilter.reset(); codeFilter.reset(); continentFilter.reset();
+  map.flyTo({ center: CONFIG.center, zoom: CONFIG.zoom, duration: 1200 });
+  applyFilters();
+});
+
+document.addEventListener('click', () => {
+  closeAllMultiSelects();
+  filterPanel.classList.remove('open');
+  document.getElementById('org-tooltip').classList.remove('open');
+  document.getElementById('country-tooltip').classList.remove('open');
+  document.getElementById('info-modal').classList.remove('visible');
+});
+
+document.getElementById('filters').addEventListener('click', e => e.stopPropagation());
+document.getElementById('popup').addEventListener('click',   e => e.stopPropagation());
+document.getElementById('info-modal').addEventListener('click', e => e.stopPropagation());
+document.getElementById('stats').addEventListener('click',   e => e.stopPropagation());
 
 </script>
 </body>
