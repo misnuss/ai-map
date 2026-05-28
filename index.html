@@ -58,7 +58,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 }
 #filters::-webkit-scrollbar { width:4px; }
 #filters::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:2px; }
-.filter-title { font-size:12px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; justify-content:between; gap:6px; }
+.filter-title { font-size:12px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
 .filter-section { margin-bottom:12px; }
 .filter-label {
   font-size:10px; font-weight:600; color:var(--text-sec);
@@ -111,10 +111,8 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 }
 #reset-btn:hover { background:var(--primary-light); border-color:var(--primary); color:var(--primary); }
 
-/* Mobile Close Button inside filter (hidden on desktop) */
+/* Mobile Filter UI elements */
 #mobile-filter-close { display: none; background: none; border: none; font-size: 16px; color: var(--text-muted); cursor: pointer; }
-
-/* Mobile Floating Action Button for Filters */
 #mobile-filter-trigger {
   display: none; position: absolute; bottom: 24px; right: 16px; z-index: 99;
   background: var(--primary); color: #fff; border: none; padding: 12px 20px;
@@ -303,7 +301,6 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   #header h1 { font-size: 13px; }
   #header p { font-size: 10px; }
   
-  /* Verstecke das Filtermenü standardmäßig auf Smartphones */
   #filters {
     position: fixed; top: 0; left: 0; bottom: 0; height: 100vh;
     max-height: 100vh; width: 280px; border-radius: 0; border: none;
@@ -313,10 +310,9 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   #mobile-filter-close { display: block; }
   #mobile-filter-trigger { display: block; }
   
-  /* UI-Anpassungen für Mobile */
   #stats { bottom: auto; top: 110px; left: 16px; box-shadow: var(--shadow); }
-  #legend { display: none; } /* Legende aus Platzgründen auf Handys ausblenden */
-  #imprint { display: none; } /* Impressum auf Handys ausblenden für mehr Kartenplatz */
+  #legend { display: none; }
+  #imprint { display: none; } /* Mobil ausblenden für mehr Platz */
   #popup { width: calc(100% - 32px); left: 16px !important; bottom: 16px; top: auto !important; max-height: 50vh; }
 }
 </style>
@@ -460,17 +456,6 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   <div class="legend-item"><div class="legend-dot" style="background:#0891b2"></div>Oceania</div>
 </div>
 
-<div id="popup" role="dialog" aria-modal="true" aria-labelledby="popup-org">
-  <div class="popup-header">
-    <div>
-      <div class="popup-org" id="popup-org"></div>
-      <div class="popup-meta" id="popup-meta"></div>
-    </div>
-    <button class="popup-close" id="popup-close" aria-label="Close">✕</button>
-  </div>
-  <div class="popup-body" id="popup-body"></div>
-</div>
-
 <div id="imprint">
   © 2025 &nbsp;·&nbsp; Map Design &amp; Development: Mirco Nussbaum &nbsp;·&nbsp; Content: Dr. Seraina Tarnutzer-Zigerli, Mathias-Felipe de Lima-Santos &amp; Mirco Nussbaum
 </div>
@@ -489,18 +474,13 @@ let activeCategories = [];
 let activeCodes      = [];
 let activeContinents = [];
 
-// Hilfsfunktion zur Zuweisung von Kontinentfarben im JS
-function getColor(continent) {
-  return CONFIG.continentColors[continent] ?? CONFIG.defaultColor;
-}
-
+function getColor(continent) { return CONFIG.continentColors[continent] ?? CONFIG.defaultColor; }
 function matchAll(arr, val)  { return arr.length === 0 || arr.includes(val); }
 function matchAny(arr, list) { return arr.length === 0 || list.some(v => arr.includes(v)); }
 
 let orgListPopup = null;
-function closeOrgListPopup() {
-  if (orgListPopup) { orgListPopup.remove(); orgListPopup = null; }
-}
+function closeOrgListPopup() { if (orgListPopup) { orgListPopup.remove(); orgListPopup = null; } }
+
 function closeAllMultiSelects() {
   document.querySelectorAll('.multi-select-dropdown.open').forEach(d => {
     d.classList.remove('open');
@@ -532,15 +512,11 @@ function getFilteredData() {
       properties: {
         ...f.properties,
         org_count:  filtered.length,
-        orgs_json:  jsonStringSafe(filtered), 
+        orgs:       filtered 
       },
     });
   });
   return { type: 'FeatureCollection', features };
-}
-
-function jsonStringSafe(obj) {
-  return JSON.stringify(obj).replace(/'/g, "&#039;");
 }
 
 /* ============================================================
@@ -550,14 +526,11 @@ function updateStats(data) {
   const orgs = [], countries = [];
   data.features.forEach(f => {
     countries.push(f.properties.country);
-    const parsedOrgs = f.properties.orgs_json ? JSON.parse(f.properties.orgs_json) : [];
-    parsedOrgs.forEach(o => orgs.push(o.organization));
+    f.properties.orgs.forEach(o => orgs.push(o.organization));
   });
-  
   document.getElementById('stat-orgs').textContent      = orgs.length;
   document.getElementById('stat-countries').textContent = countries.length;
   document.getElementById('header-sub').textContent     = `${orgs.length} Organisations · ${countries.length} Countries`;
-  
   document.getElementById('org-tooltip-list').innerHTML =
     [...new Set(orgs)].sort().map(o => `<div class="stat-tooltip-item">${esc(o)}</div>`).join('');
   document.getElementById('country-tooltip-list').innerHTML =
@@ -567,7 +540,6 @@ function updateStats(data) {
 function applyFilters() {
   document.getElementById('popup').classList.remove('visible');
   closeOrgListPopup(); closeAllMultiSelects();
-  
   const filtered = getFilteredData();
   if (map.getSource('countries')) {
     map.getSource('countries').setData(filtered);
@@ -576,7 +548,7 @@ function applyFilters() {
 }
 
 /* ============================================================
-   MAP LOAD & INIT DATA
+   MAP LOAD & INIT
    ============================================================ */
 map.on('load', () => {
   COUNTRY_DATA.features.forEach(f => {
@@ -650,11 +622,11 @@ map.on('load', () => {
    ============================================================ */
 map.on('click', 'country-circles', e => {
   e.preventDefault();
-  const feature  = e.features[0];
-  const country  = feature.properties.country;
-  const color    = getColor(feature.properties.continent);
-  const allOrgs   = ORGS_BY_COUNTRY.get(country) ?? [];
-  const orgs     = allOrgs.filter(org =>
+  const feature = e.features[0];
+  const country = feature.properties.country;
+  const color   = getColor(feature.properties.continent);
+  const allOrgs = ORGS_BY_COUNTRY.get(country) ?? [];
+  const orgs    = allOrgs.filter(org =>
     matchAll(activeTypes, org.type) && matchAll(activeSubtypes, org.subtype) &&
     matchAny(activeCategories, org.categories) && matchAny(activeCodes, org.codes)
   );
@@ -690,12 +662,10 @@ function openPopup(org) {
   const segments = org.segments ?? [];
   document.getElementById('popup-org').textContent  = org.organization;
   document.getElementById('popup-meta').textContent = `${org.country} · ${org.continent}`;
-  
   const filteredSegs = segments.filter(s =>
     (activeCategories.length === 0 || activeCategories.includes(s.category)) &&
     (activeCodes.length === 0 || activeCodes.includes(s.code))
   );
-  
   const uniqueCodes = [...new Set(segments.map(s => s.code).filter(Boolean))];
   const codesHTML = uniqueCodes.map(c => {
     const hi = activeCodes.length > 0 && activeCodes.includes(c);
@@ -771,7 +741,7 @@ document.getElementById('country-info-btn').addEventListener('click', e => {
 });
 
 /* ============================================================
-   MOBILE OVERLAY INTERACTION (NEU)
+   MOBILE OVERLAY INTERACTION
    ============================================================ */
 const filterPanel = document.getElementById('filters');
 document.getElementById('mobile-filter-trigger').addEventListener('click', e => {
@@ -829,29 +799,6 @@ const continentFilter = setupChipFilter('continent-filters', vals => {
 });
 const subtypeFilter = setupMultiSelect('subtype-dropdown', 'subtype-btn', 'subtype-label', 'All Subtypes', vals => { activeSubtypes = vals; applyFilters(); });
 const codeFilter    = setupMultiSelect('code-dropdown',   'code-btn',   'code-label',   'All Codes',    vals => { activeCodes = vals; applyFilters(); });
-
-/* ============================================================
-   RESET & DOCUMENT OVERLAYS
-   ============================================================ */
-document.getElementById('reset-btn').addEventListener('click', () => {
-  activeTypes=[]; activeSubtypes=[]; activeCategories=[]; activeCodes=[]; activeContinents=[];
-  typeFilter.reset(); subtypeFilter.reset(); categoryFilter.reset(); codeFilter.reset(); continentFilter.reset();
-  map.flyTo({ center: CONFIG.center, zoom: CONFIG.zoom, duration: 1200 });
-  applyFilters();
-});
-
-document.addEventListener('click', () => {
-  closeAllMultiSelects();
-  filterPanel.classList.remove('open'); // Schließt mobile Filter bei Klick auf die Karte
-  document.getElementById('org-tooltip').classList.remove('open');
-  document.getElementById('country-tooltip').classList.remove('open');
-  document.getElementById('info-modal').classList.remove('visible');
-});
-
-document.getElementById('filters').addEventListener('click', e => e.stopPropagation());
-document.getElementById('popup').addEventListener('click',   e => e.stopPropagation());
-document.getElementById('info-modal').addEventListener('click', e => e.stopPropagation());
-document.getElementById('stats').addEventListener('click',   e => e.stopPropagation());
 
 </script>
 </body>
