@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How Media Governs AI — A Worldwide Map of Guidelines</title>
+<title>Visual AI Guidelines in the Media Ecosystem around the World</title>
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet"/>
 <script src="data.js"></script>
@@ -204,7 +204,10 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   background:var(--surface); border:1px solid var(--border);
   border-radius:var(--radius); box-shadow:var(--shadow-lg);
   width:320px; padding:18px 20px;
+  max-height:calc(100vh - 90px); overflow-y:auto;
 }
+#info-modal::-webkit-scrollbar { width:4px; }
+#info-modal::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:2px; }
 #info-modal.visible { display:block; }
 #info-modal h2 { font-size:14px; font-weight:700; margin-bottom:10px; }
 #info-modal p  { font-size:12px; color:var(--text-sec); line-height:1.7; margin-bottom:8px; }
@@ -287,14 +290,11 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 
 /* IMPRINT */
 #imprint {
-  position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
-  z-index:10; font-size:11px; color:var(--text-muted);
-  background:rgba(255,255,255,0.85); padding:4px 14px;
-  border-radius:20px; white-space:nowrap; pointer-events:auto;
+  margin-top:12px; padding-top:10px; border-top:1px solid var(--border);
+  font-size:10px; color:var(--text-muted); text-align:center; line-height:1.5;
 }
 #imprint a { color:var(--text-muted); text-decoration:none; }
 #imprint a:hover { color:var(--primary); }
-@media (max-width:768px) { #imprint { display:none; } }
 </style>
 </head>
 <body>
@@ -314,7 +314,7 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
 
 <!-- HEADER -->
 <div id="header">
-  <h1>How Media Governs AI — A Worldwide Map of Guidelines</h1>
+  <h1>Visual AI Guidelines in the Media Ecosystem around the World</h1>
   <p id="header-sub">Loading…</p>
 </div>
 
@@ -328,7 +328,10 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   <p>AI is reshaping how media produce images, video, and text — and organisations are setting their own rules for it. This map collects those rules: AI guidelines from news outlets, agencies, regulators, and industry bodies worldwide, with a focus on AI-generated visuals.</p>
   <p>Click a country pin to see the organisations active there, then click an organisation name to read their guidelines and coded segments.</p>
   <p>Use the filters on the left to narrow results by organisation type, guideline category, code, or continent.</p>
-  <p style="color:var(--text-muted);font-size:11px;">A research project by the University of Fribourg — Institute of Digital Communication and Media Innovation (IDCMI).</p>
+  <p style="color:var(--text-muted);font-size:11px;">A research project by the Institute of Digital Communication and Media Innovation (IDCMI), University of Fribourg / Fachhochschule Graubünden, University of New South Wales (UNSW) &amp; Federal University of São Paulo (Unifesp).</p>
+  <div id="imprint">
+    © 2026 &nbsp;·&nbsp; Map Design &amp; Development: Mirco Nussbaum &nbsp;·&nbsp; Content: Mathias-Felipe de-Lima-Santos, Seraina Tarnutzer-Zigerli, Mirco Nussbaum, &amp; Sina Blassnig
+  </div>
 </div>
 
 <!-- FILTER PANEL -->
@@ -354,16 +357,16 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
       </button>
       <div class="multi-select-dropdown" id="subtype-dropdown">
         <div class="multi-select-option selected" data-value="all"><div class="check">✓</div>All</div>
-        <div class="multi-select-option" data-value="Public Service Media"><div class="check"></div>Public Service Media</div>
-        <div class="multi-select-option" data-value="Digital News Outlet"><div class="check"></div>Digital News Outlet</div>
-        <div class="multi-select-option" data-value="Legacy Media"><div class="check"></div>Legacy Media</div>
-        <div class="multi-select-option" data-value="News Agency"><div class="check"></div>News Agency</div>
-        <div class="multi-select-option" data-value="Media Tech Company"><div class="check"></div>Media Tech Company</div>
-        <div class="multi-select-option" data-value="Image Stock Platform"><div class="check"></div>Image Stock Platform</div>
-        <div class="multi-select-option" data-value="Press Council"><div class="check"></div>Press Council</div>
-        <div class="multi-select-option" data-value="Regulator"><div class="check"></div>Regulator</div>
-        <div class="multi-select-option" data-value="NGO / Coalition"><div class="check"></div>NGO / Coalition</div>
-        <div class="multi-select-option" data-value="Commercial/Private Media"><div class="check"></div>Commercial/Private Media</div>
+        <div class="multi-select-option" data-value="Public Service Media" data-type="News Media"><div class="check"></div>Public Service Media</div>
+        <div class="multi-select-option" data-value="Digital News Outlet" data-type="News Media"><div class="check"></div>Digital News Outlet</div>
+        <div class="multi-select-option" data-value="Legacy Media" data-type="News Media"><div class="check"></div>Legacy Media</div>
+        <div class="multi-select-option" data-value="News Agency" data-type="News Media"><div class="check"></div>News Agency</div>
+        <div class="multi-select-option" data-value="Commercial/Private Media" data-type="News Media"><div class="check"></div>Commercial/Private Media</div>
+        <div class="multi-select-option" data-value="Media Tech Company" data-type="Commercial/Private Media"><div class="check"></div>Media Tech Company</div>
+        <div class="multi-select-option" data-value="Image Stock Platform" data-type="Commercial/Private Media"><div class="check"></div>Image Stock Platform</div>
+        <div class="multi-select-option" data-value="Press Council" data-type="Governance Body"><div class="check"></div>Press Council</div>
+        <div class="multi-select-option" data-value="Regulator" data-type="Governance Body"><div class="check"></div>Regulator</div>
+        <div class="multi-select-option" data-value="NGO / Coalition" data-type="NGO / Coalition"><div class="check"></div>NGO / Coalition</div>
       </div>
     </div>
   </div>
@@ -388,23 +391,23 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
       </button>
       <div class="multi-select-dropdown" id="code-dropdown">
         <div class="multi-select-option selected" data-value="all"><div class="check">✓</div>All</div>
-        <div class="multi-select-option" data-value="Harm &amp; Safety"><div class="check"></div>Harm &amp; Safety</div>
-        <div class="multi-select-option" data-value="Transparency &amp; Disclosure"><div class="check"></div>Transparency &amp; Disclosure</div>
-        <div class="multi-select-option" data-value="Intellectual Property &amp; Copyright"><div class="check"></div>IP &amp; Copyright</div>
-        <div class="multi-select-option" data-value="Bias, Fairness &amp; Representation"><div class="check"></div>Bias &amp; Fairness</div>
-        <div class="multi-select-option" data-value="Integrity &amp; Trustworthiness (Factualness)"><div class="check"></div>Integrity</div>
-        <div class="multi-select-option" data-value="Accountability Structures"><div class="check"></div>Accountability</div>
-        <div class="multi-select-option" data-value="Formal Policy Embedding"><div class="check"></div>Formal Policy</div>
-        <div class="multi-select-option" data-value="Governance &amp; Monitoring Mechanisms"><div class="check"></div>Governance Mechanisms</div>
-        <div class="multi-select-option" data-value="Static Visuals (Images/Photos)"><div class="check"></div>Static Visuals</div>
-        <div class="multi-select-option" data-value="Moving Images (Video/Film)"><div class="check"></div>Moving Images</div>
-        <div class="multi-select-option" data-value="(Info)graphics &amp; Illustrations"><div class="check"></div>(Info)graphics</div>
-        <div class="multi-select-option" data-value="Constraint / Prohibitive Framing"><div class="check"></div>Constraint Framing</div>
-        <div class="multi-select-option" data-value="Legitimation / Supportive Framing"><div class="check"></div>Legitimation Framing</div>
-        <div class="multi-select-option" data-value="Dynamicity of guidelines regarding visuals"><div class="check"></div>Dynamicity</div>
-        <div class="multi-select-option" data-value="No replacement of humans"><div class="check"></div>No replacement of humans</div>
-        <div class="multi-select-option" data-value="Train employees"><div class="check"></div>Train employees</div>
-        <div class="multi-select-option" data-value="NEW: Same rules for external partners who provide services"><div class="check"></div>Same rules for partners</div>
+        <div class="multi-select-option" data-value="Harm &amp; Safety" data-category="Ethical Dimensions of AI Content"><div class="check"></div>Harm &amp; Safety</div>
+        <div class="multi-select-option" data-value="Transparency &amp; Disclosure" data-category="Ethical Dimensions of AI Content"><div class="check"></div>Transparency &amp; Disclosure</div>
+        <div class="multi-select-option" data-value="Intellectual Property &amp; Copyright" data-category="Ethical Dimensions of AI Content"><div class="check"></div>IP &amp; Copyright</div>
+        <div class="multi-select-option" data-value="Bias, Fairness &amp; Representation" data-category="Ethical Dimensions of AI Content"><div class="check"></div>Bias &amp; Fairness</div>
+        <div class="multi-select-option" data-value="Integrity &amp; Trustworthiness (Factualness)" data-category="Ethical Dimensions of AI Content"><div class="check"></div>Integrity</div>
+        <div class="multi-select-option" data-value="Accountability Structures" data-category="Governance &amp; Enforcement Architecture"><div class="check"></div>Accountability</div>
+        <div class="multi-select-option" data-value="Formal Policy Embedding" data-category="Governance &amp; Enforcement Architecture"><div class="check"></div>Formal Policy</div>
+        <div class="multi-select-option" data-value="Governance &amp; Monitoring Mechanisms" data-category="Governance &amp; Enforcement Architecture"><div class="check"></div>Governance Mechanisms</div>
+        <div class="multi-select-option" data-value="Static Visuals (Images/Photos)" data-category="Visual AI Scope"><div class="check"></div>Static Visuals</div>
+        <div class="multi-select-option" data-value="Moving Images (Video/Film)" data-category="Visual AI Scope"><div class="check"></div>Moving Images</div>
+        <div class="multi-select-option" data-value="(Info)graphics &amp; Illustrations" data-category="Visual AI Scope"><div class="check"></div>(Info)graphics</div>
+        <div class="multi-select-option" data-value="Constraint / Prohibitive Framing" data-category="Rhetorical Strategies Toward AI Adoption"><div class="check"></div>Constraint Framing</div>
+        <div class="multi-select-option" data-value="Legitimation / Supportive Framing" data-category="Rhetorical Strategies Toward AI Adoption"><div class="check"></div>Legitimation Framing</div>
+        <div class="multi-select-option" data-value="Dynamicity of guidelines regarding visuals" data-category="New Codes"><div class="check"></div>Dynamicity</div>
+        <div class="multi-select-option" data-value="No replacement of humans" data-category="New Codes"><div class="check"></div>No replacement of humans</div>
+        <div class="multi-select-option" data-value="Train employees" data-category="New Codes"><div class="check"></div>Train employees</div>
+        <div class="multi-select-option" data-value="NEW: Same rules for external partners who provide services" data-category="New Codes"><div class="check"></div>Same rules for partners</div>
       </div>
     </div>
   </div>
@@ -447,11 +450,6 @@ body { font-family:var(--font); font-size:14px; color:var(--text); background:#e
   <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>S. America</div>
   <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>Asia</div>
   <div class="legend-item"><div class="legend-dot" style="background:#0891b2"></div>Oceania</div>
-</div>
-
-<!-- IMPRINT -->
-<div id="imprint">
-  © 2026 &nbsp;·&nbsp; Map Design &amp; Development: Mirco Nussbaum &nbsp;·&nbsp; Content: Dr. Seraina Tarnutzer-Zigerli, Mathias-Felipe de Lima-Santos &amp; Mirco Nussbaum
 </div>
 
 <!-- DETAIL POPUP -->
@@ -710,7 +708,25 @@ function setupMultiSelect(dropdownId, btnId, labelId, allLabel, onChange) {
     onChange(selected);
   });
   btn.addEventListener('click', e => { e.stopPropagation(); closeAllMultiSelects(); dropdown.classList.toggle('open'); });
-  return { reset() { selected = []; dropdown.querySelectorAll('.multi-select-option').forEach(o => { const isAll = o.dataset.value==='all'; o.classList.toggle('selected',isAll); o.querySelector('.check').textContent = isAll?'✓':''; }); label.textContent = allLabel; } };
+  return {
+    reset() { selected = []; dropdown.querySelectorAll('.multi-select-option').forEach(o => { const isAll = o.dataset.value==='all'; o.classList.toggle('selected',isAll); o.querySelector('.check').textContent = isAll?'✓':''; }); label.textContent = allLabel; },
+    filterByCategories(categories, attr = 'category') {
+      const options = [...dropdown.querySelectorAll('.multi-select-option')].filter(o => o.dataset.value !== 'all');
+      let pruned = false;
+      options.forEach(o => {
+        const visible = !categories.length || categories.includes(o.dataset[attr]);
+        o.style.display = visible ? '' : 'none';
+        if (!visible && selected.includes(o.dataset.value)) {
+          selected = selected.filter(v => v !== o.dataset.value);
+          o.classList.remove('selected'); o.querySelector('.check').textContent = '';
+          pruned = true;
+        }
+      });
+      if (!selected.length) { dropdown.querySelector('[data-value="all"]').classList.add('selected'); dropdown.querySelector('[data-value="all"]').querySelector('.check').textContent = '✓'; }
+      label.textContent = selected.length ? `${selected.length} selected` : allLabel;
+      if (pruned) onChange(selected);
+    },
+  };
 }
 
 function setupChipFilter(containerId, onChange) {
@@ -735,8 +751,8 @@ function setupChipFilter(containerId, onChange) {
   return { reset() { selected = []; container.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value==='all')); } };
 }
 
-const typeFilter      = setupChipFilter('type-filters',      vals => { activeTypes = vals; applyFilters(); });
-const categoryFilter  = setupChipFilter('category-filters',  vals => { activeCategories = vals; applyFilters(); });
+const typeFilter      = setupChipFilter('type-filters',      vals => { activeTypes = vals; subtypeFilter.filterByCategories(vals, 'type'); applyFilters(); });
+const categoryFilter  = setupChipFilter('category-filters',  vals => { activeCategories = vals; codeFilter.filterByCategories(vals); applyFilters(); });
 const continentFilter = setupChipFilter('continent-filters', vals => {
   activeContinents = vals;
   if (vals.length === 1) { const v = CONTINENT_VIEWS[vals[0]] || CONTINENT_VIEWS['all']; map.flyTo({ center: v.center, zoom: v.zoom, duration: 1200 }); }
@@ -749,6 +765,8 @@ const codeFilter    = setupMultiSelect('code-dropdown',    'code-btn',    'code-
 document.getElementById('reset-btn').addEventListener('click', () => {
   activeTypes=[]; activeSubtypes=[]; activeCategories=[]; activeCodes=[]; activeContinents=[];
   typeFilter.reset(); subtypeFilter.reset(); categoryFilter.reset(); codeFilter.reset(); continentFilter.reset();
+  codeFilter.filterByCategories([]);
+  subtypeFilter.filterByCategories([], 'type');
   map.flyTo({ center: CONFIG.center, zoom: CONFIG.zoom, duration: 1200 });
   applyFilters();
 });
